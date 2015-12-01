@@ -1,0 +1,102 @@
+Create account:
+localhost:8090/createAccount
+{
+    "nick_name": "lucy",
+    "user_email":"lucy.com",
+    "bank_account":"123456"
+}
+{"status":"Success","user_email":"lucy.com"}
+
+
+Create Apartment:
+localhost:8090/createApt
+{
+    "apt_name": "Trace2303",
+    "user_email":"Henry.com",
+    "email_lst": ["lucy.com" , "Bob.com"]
+}
+
+{"status":"Success","apt_id":"a669ba1b-2fbc-4991-8e30-8640589a4943"}
+
+
+Create Expense:
+localhost:8090/createExpense
+{
+    "expense_name": "visit to LA",
+    "user_email":"Henry.com",
+    "user_email_lst": ["lucy.com","Bob.com"],
+    "apt_name" : "Trace2303"
+}
+{"status":"Success","expense_id":"c9e26cae-16f1-44cf-978a-a72014e8d1ea"}
+
+
+Create Item under expense:
+localhost:8090/createItem
+
+{
+    "expense_name": "visit to LA",
+    "buyer_email": "Henry.com",
+    "sharer_email_lst": ["lucy.com","Bob.com"],
+    "total_cost" : "986.2",
+    "item_name": "Flight AXA12 AUS-LA"
+}
+
+{"status":"Success","item_id_id":"6f6e6bc1-57fb-4be2-ad3f-4db3dff7d133"}
+
+
+
+Add user to Apartment:
+localhost:8090/addUserToApt
+{
+    "apt_name": "Trace2303",
+    "user_email":"Henry.com",
+    "new_user": "Alex.com"
+}
+{"status":"Success","apt_id":"a669ba1b-2fbc-4991-8e30-8640589a4943"}
+
+
+
+Checkout single expense:
+localhost:8090/checkSingleExpense?expense_name=visit to NYC&apt_name=Trace2303&user_email=Henry.com
+{"status":"Success"}
+
+Checkout all expenses;
+localhost:8090/checkAllExpense?apt_name=Trace2303&user_email=Henry.com
+{"status":"Success"}
+
+Calculate payment for each Apartment member:
+localhost:8090/getPayment?apt_name=Trace2303&user_email=Henry.com
+{"status":"Success","payment_lst":[{"to":"Henry.com","from":"Bob.com","amount":333.33333333333337},{"to":"Henry.com","from":"lucy.com","amount":133.33333333333337}]}
+
+Add note to apartment's notebook:
+localhost:8090/addNote
+{
+    "apt_name": "Trace2303",
+    "user_email":"Henry.com",
+    "description": "LA is awesome!!"
+}
+{"note_id":"a14f99de-c971-4275-8d68-8697b7396f9b","status":"Success","notebook_id":"93f34d58-d7fd-4c88-8ab2-f75d5e59b6ce"}
+
+Edit Note (only note's author is allowed to do that):
+localhost:8090/editNote
+{
+    "note_id": "a14f99de-c971-4275-8d68-8697b7396f9b",
+    "user_email":"Henry.com",
+    "new_description": "LA is actually not awesome!!"
+}
+{"status":"Success"}
+
+// get all notes in the note book
+localhost:8090/getAllNote?apt_name=Trace2303&user_email=Henry.com
+{"AllNoteLst":[{"author":"Henry.com","description":"LA is actually not awesome!!","last_edit_date":"2015-11-30 23:15:48.421405"}],"status":"Success"}
+
+
+// get single node
+localhost:8090/getSingleNote?user_email=Henry.com&note_id=a14f99de-c971-4275-8d68-8697b7396f9b
+
+{"Note":{"description":"LA is actually not awesome!!","last_edit_date":"2015-11-30 23:15:48.421405","author":"Henry.com"},"status":"Success"}
+
+
+
+
+
