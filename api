@@ -91,7 +91,7 @@ localhost:8090/getAllNote?apt_name=Trace2303&user_email=Henry.com
 {"AllNoteLst":[{"author":"Henry.com","description":"LA is actually not awesome!!","last_edit_date":"2015-11-30 23:15:48.421405"}],"status":"Success"}
 
 
-// get single node
+// get single note
 localhost:8090/getSingleNote?user_email=Henry.com&note_id=a14f99de-c971-4275-8d68-8697b7396f9b
 
 {"Note":{"description":"LA is actually not awesome!!","last_edit_date":"2015-11-30 23:15:48.421405","author":"Henry.com"},"status":"Success"}
