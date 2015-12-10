@@ -17,6 +17,7 @@ class Expense(ndb.Model):
     cover_url = ndb.StringProperty()
     last_edit = ndb.DateTimeProperty(auto_now_add=True)
     total_cost = ndb.FloatProperty()
+    approval_cost = ndb.FloatProperty()
 
     def checkout(self):
         for item_id in self.item_id_lst:
@@ -26,6 +27,8 @@ class Expense(ndb.Model):
                     if item.is_paid:
                         continue
                     item.checkout()
+                    self.total_cost += item.total_cost
+
         self.is_paid = True
         self.put()
     # def checkOutSingleItem(self, item_id):
@@ -64,6 +67,8 @@ class Note(ndb.Model):
 
 
 
+
+
 class Item(ndb.Model):
     item_id = ndb.StringProperty()
     is_paid = ndb.BooleanProperty()
@@ -81,6 +86,8 @@ class Item(ndb.Model):
 
         buyer_lst = User.query(User.user_email == self.buyer_email).fetch()
         buyer = buyer_lst[0]
+        buyer.borrow += payment
+        buyer.cost += self.total_cost
         for sharer_email in self.sharer_email_lst:
             sharer_lst = User.query(User.user_email == sharer_email).fetch()
 
@@ -89,6 +96,7 @@ class Item(ndb.Model):
             sharer = sharer_lst[0]
             sharer.owe -=  payment
             buyer.owe += payment
+            sharer.borrow += payment
             sharer.put()
         buyer.put()
         self.is_paid = True
@@ -105,6 +113,7 @@ class Apartment(ndb.Model):
     user_email_lst = ndb.StringProperty(repeated=True)
     expense_id_lst = ndb.StringProperty(repeated=True)
     cover_url = ndb.StringProperty()
+    total_cost = ndb.FloatProperty()
 
     def checkout_single_expense(self, expense_id):
         if expense_id in self.expense_id_lst:
@@ -127,6 +136,10 @@ class User(ndb.Model):
      nick_name = ndb.StringProperty()
      user_email = ndb.StringProperty()
      bank_account = ndb.StringProperty()
+
+     cost = ndb.FloatProperty()     # the money I paid for others
+     borrow = ndb.FloatProperty()   # the money others paid for me
+
      owe = ndb.FloatProperty()
      cover_url = ndb.StringProperty()
      todo_list = ndb.StringProperty(repeated=True)

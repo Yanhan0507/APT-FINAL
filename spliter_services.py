@@ -67,7 +67,9 @@ class CreateAccountService(ServiceHandler):
                         nick_name = nick_name,
                         bank_account = bank_account,
                         cover_url = cover_url,
-                        owe = INITIAL_BALANCE
+                        owe = INITIAL_BALANCE,
+                        cost = 0,
+                        borrow = 0
                         )
 
         new_user.put()
@@ -119,7 +121,8 @@ class CreateAptService(ServiceHandler):
                             creater_email = user_email,
                             user_email_lst = user_email_lst,
                             cover_url = cover_url,
-                            notebook_id = str(note_book_id))
+                            notebook_id = str(note_book_id),
+                            total_cost = 0)
         new_apt.put()
 
         self.respond(apt_id = str(apt_id), status="Success")
@@ -233,7 +236,6 @@ class CreateItemService(ServiceHandler):
                         )
         new_item.put()
         target_expense.item_id_lst.insert(0, str(item_id))
-        target_expense.total_cost += total_cost
         target_expense.put()
 
 
@@ -350,6 +352,8 @@ class checkSingleExpenseService(ServiceHandler):
             response['error'] = 'the : ' + expense_name + ' has already been paid'
             return self.respond(**response)
         cur_expense.checkout()
+        cur_apt.total_cost += cur_expense.total_cost
+        cur_apt.put()
         self.respond(status="Success")
 
 class checkAllExpenseService(ServiceHandler):
@@ -372,6 +376,8 @@ class checkAllExpenseService(ServiceHandler):
                 expense = expense_lst[0]
                 if not expense.is_paid:
                     expense.checkout()
+                    cur_apt.total_cost += expense.total_cost
+                    cur_apt.put()
 
         self.respond(status="Success")
 
@@ -566,6 +572,38 @@ class getSingleNoteService(ServiceHandler):
         retValue['description'] = cur_note.description
         self.respond(Note = retValue, status="Success")
 
+class getOweandOwedService(ServiceHandler):
+    def get(self):
+
+        apt_name = self.request.get(IDENTIFIER_APT_NAME)
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+        apt_lst = Apartment.query(Apartment.apt_name == apt_name).fetch()
+
+        # print "called: " + user_email + ", " + apt_name
+        cur_apt = None
+        for apt in apt_lst:
+            if user_email in apt.user_email_lst:
+                cur_apt = apt
+
+        user_info_lst = []
+        for user_email in apt.user_email_lst:
+            users = User.query(User.user_email == user_email).fetch()
+            user = users[0]
+            user_info = {}
+            user_info['email:'] = user_email
+            user_info['nick_name'] = user.nick_name
+            user_info['owe'] = user.cost
+            user_info['owed'] = user.borrow
+            user_info['balance'] = user.owe
+            user_info_lst.append(user_info)
+
+        self.respond(user_info_lst = user_info_lst, total_cost = apt.total_cost, status="Success")
+
+
+
+
+
+
 
 
 app = webapp2.WSGIApplication([
@@ -578,6 +616,7 @@ app = webapp2.WSGIApplication([
     ('/checkSingleExpense',checkSingleExpenseService),
     ('/checkAllExpense', checkAllExpenseService),
     ('/getPayment', getPaymentService),
+    ('/getOweandOwed', getOweandOwedService),
     ('/addNote', addNoteService),
     ('/editNote' ,editNoteService),
     ('/getAllNote', getAllNoteService),

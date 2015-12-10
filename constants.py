@@ -22,7 +22,7 @@ IDENTIFIER_USER_PHOTO = 'user_photo'
 
 IDENTIFIER_APT_PHOTO = 'apt_photo'
 
-IDENTIFIER_USER_EMAIL_LIST = 'email_lst'
+IDENTIFIER_USER_EMAIL_LIST = 'user_email_lst'
 IDENTIFIER_SHARER_LIST = 'sharer_email_lst'
 IDENTIFIER_USER_LIST = 'user_email_lst'
 
