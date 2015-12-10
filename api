@@ -1,3 +1,11 @@
+rules:
+u need to register an account before using this service
+each user_email have to belong to exactly one apartment
+you can add expense to apartment
+you can add item to expense
+the money u owe/owed will not be calculated until any apartment member check outthe expense
+if you want to get the optimized way to create payment (minimize the number of total transfers), u can simply use the api: /getPayment 
+
 Create account:
 localhost:8090/createAccount
 {
