@@ -20,6 +20,14 @@ localhost:8090/createAccount
 // get user infomation (log in )
 localhost:8090/getUserInfo?user_email=henry.com
 
+response:
+if the user has not registered yet:
+{"error":"the email: Henry.com has not registered yet"}
+
+if the user has not been assigned to apartment yet: (apt_info will be empty)
+{"status":"Success","owe":0.0,"usr_photo":null,"balance":0.0,"nick_name":"Henry","owed":0.0,"user_email":"Henry.com","apt_info":{},"bank_account":"123456"}
+
+if the user has registered the account and has been assigned to one apartment:
 {"bank_account":"123456","owe":0.0,"owed":0.0,"apt_info":{"roommates_lst":["henry","lucy","bob"],"apt_photo":null,"apt_name":"Trace2303","apt_id":"17d9d5dd-dd1d-4958-80c2-f7d1684db089"},"user_email":"henry.com","usr_photo":null,"nick_name":"henry","status":"Success","balance":0.0}
 
 
