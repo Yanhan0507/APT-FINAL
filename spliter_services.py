@@ -600,6 +600,45 @@ class getOweandOwedService(ServiceHandler):
         self.respond(user_info_lst = user_info_lst, total_cost = apt.total_cost, status="Success")
 
 
+class getUserInfoService(ServiceHandler):
+    def get(self):
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+
+        users = User.query(User.user_email == user_email).fetch()
+        if len(users) == 0:
+            response = {}
+            response['error'] = 'the email: ' + user_email + ' has not registered yet'
+            return self.respond(**response)
+
+        cur_user = users [0]
+        bank_account = cur_user.bank_account
+        nick_name = cur_user.nick_name
+        owe = cur_user.cost
+        owed = cur_user.borrow
+        balance = cur_user.owe
+
+        apt_id = cur_user.apt_id
+
+        apts = Apartment.query(Apartment.apt_id == apt_id).fetch()
+
+        apt_info = {}
+        if len(apts) > 0:
+            apt = apts[0]
+            apt_info['apt_name'] = apt.apt_name
+            apt_info['apt_id'] = apt.apt_id
+            apt_info['roommates_lst'] = apt.get_all_memebers_nickname()
+            apt_info['apt_photo'] = apt.cover_url
+
+
+        usr_photo = cur_user.cover_url
+
+        self.respond(usr_photo = usr_photo, bank_account = bank_account, nick_name = nick_name,
+                     user_email = user_email, owe = owe, owed = owed, balance = balance, apt_info = apt_info, status="Success")
+
+
+
+
+
 
 
 
@@ -607,6 +646,7 @@ class getOweandOwedService(ServiceHandler):
 
 
 app = webapp2.WSGIApplication([
+    ('/getUserInfo', getUserInfoService),
     ('/createAccount', CreateAccountService),
     ('/createApt', CreateAptService),
     ('/createExpense', CreateExpenseService),

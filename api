@@ -6,6 +6,8 @@ you can add item to expense
 the money u owe/owed will not be calculated until any apartment member check outexpense(s)
 if you want to get the optimized way to create payment (minimize the number of total transfers), u can simply use the api: /getPayment 
 
+
+
 Create account:
 localhost:8090/createAccount
 {
@@ -15,13 +17,19 @@ localhost:8090/createAccount
 }
 {"status":"Success","user_email":"lucy.com"}
 
+// get user infomation (log in )
+localhost:8090/getUserInfo?user_email=henry.com
+
+{"bank_account":"123456","owe":0.0,"owed":0.0,"apt_info":{"roommates_lst":["henry","lucy","bob"],"apt_photo":null,"apt_name":"Trace2303","apt_id":"17d9d5dd-dd1d-4958-80c2-f7d1684db089"},"user_email":"henry.com","usr_photo":null,"nick_name":"henry","status":"Success","balance":0.0}
+
+
 
 Create Apartment:
 localhost:8090/createApt
 {
     "apt_name": "Trace2303",
     "user_email":"Henry.com",
-    "email_lst": ["lucy.com" , "Bob.com"]
+    "user_email_lst": ["lucy.com" , "Bob.com"]
 }
 
 {"status":"Success","apt_id":"a669ba1b-2fbc-4991-8e30-8640589a4943"}
@@ -108,5 +116,4 @@ localhost:8090/getSingleNote?user_email=Henry.com&note_id=a14f99de-c971-4275-8d6
 localhost:8070/getOweandOwed?apt_name=Trace2303&user_email=henry.com
 
 ":"Success","total_cost":1958.6000000000001,"user_info_lst":[{"email:":"henry.com","balance":333.33333333333337,"owe":986.2,"nick_name":"henry","owed":652.8666666666667},{"email:":"lucy.com","balance":-266.66666666666674,"owe":386.2,"nick_name":"luc1y","owed":652.8666666666667},{"email:":"alex.com","balance":-66.66666666666663,"owe":586.2,"nick_name":"alex","owed":652.8666666666667}]}
-
 

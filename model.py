@@ -124,6 +124,13 @@ class Apartment(ndb.Model):
                     current_expense.checkout()
         self.put()
 
+    def get_all_memebers_nickname(self):
+        ret_lst = []
+        for user_email in self.user_email_lst:
+            users = User.query(User.user_email == user_email).fetch()
+            user = users[0]
+            ret_lst.append(user.nick_name)
+        return ret_lst
 
     def checkout_all_expense(self):
         for expense_id in self.expense_id_lst:
