@@ -31,6 +31,15 @@ class Expense(ndb.Model):
 
         self.is_paid = True
         self.put()
+
+    def getAllItems(self):
+        ret_lst = []
+        for item_id in self.item_id_lst:
+            items = Item.query(Item.item_id == item_id).fetch()
+            item = items[0]
+            ret_lst.append(item)
+        return ret_lst
+
     # def checkOutSingleItem(self, item_id):
 
 class NoteBook(ndb.Model):
@@ -46,6 +55,14 @@ class NoteBook(ndb.Model):
                         )
         new_note.put()
         self.note_id_lst.insert(0, new_note)
+
+    def getAllnotes(self):
+        ret_lst = []
+        for note_id in self.note_id_lst:
+            notes = Note.query(Note.id == note_id).fetch()
+            note = notes[0]
+            ret_lst.append(note)
+        return ret_lst
 
 class Note(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add=True)
@@ -115,6 +132,7 @@ class Apartment(ndb.Model):
     cover_url = ndb.StringProperty()
     total_cost = ndb.FloatProperty()
 
+
     def checkout_single_expense(self, expense_id):
         if expense_id in self.expense_id_lst:
             current_expense_lst = Expense.query(Expense.expense_id == expense_id)
@@ -136,7 +154,18 @@ class Apartment(ndb.Model):
         for expense_id in self.expense_id_lst:
             self.checkout_single_expense(expense_id)
         self.put()
+    def get_Note_book(self):
+        notebooks = NoteBook.query(NoteBook.notebook_id == self.notebook_id).fetch()
+        notebook = notebooks[0]
+        return notebook
 
+    def getAllexpenses(self):
+        ret_lst = []
+        for expense_id in self.expense_id_lst:
+            expenses = Expense.query(Expense.expense_id == expense_id).fetch()
+            expense = expenses[0]
+            ret_lst.append(expense)
+        return ret_lst
 
 class User(ndb.Model):
      apt_id = ndb.StringProperty()

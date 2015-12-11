@@ -43,6 +43,17 @@ localhost:8090/createApt
 {"status":"Success","apt_id":"a669ba1b-2fbc-4991-8e30-8640589a4943"}
 
 
+get apartment information:
+
+localhost:8090/getAptInfo?user_email=henry.com&apt_name=Trace2303
+
+{"roomates_nickname_lst":["henry","lucy","bob"],
+"roomates_email_lst":["henry.com","lucy.com","bob.com"],
+"notes_lst":[],
+"cover_url":null,"apt_name":"Trace2303",
+"expenses_lst":[{"sharer_lst":["bob.com","lucy.com","henry.com"],"date":"2015-12-11 07:44:57.935437","is_paid":false,"expense_id":"3a3a979c-679e-4696-b1c3-e8024a8f07d4","photo":null,"creater_nickname":"bob","expense_name":"visit to LA 2","the_number_of_items":0},{"sharer_lst":["henry.com","lucy.com","bob.com"],"date":"2015-12-11 07:44:42.258019","is_paid":false,"expense_id":"e9eafe0d-81ec-4873-9b7e-bbd0acde7f41","photo":null,"creater_nickname":"henry","expense_name":"visit to LA","the_number_of_items":0}],"apt_id":"17d9d5dd-dd1d-4958-80c2-f7d1684db089","status":"Success"}
+
+
 Create Expense:
 localhost:8090/createExpense
 {

@@ -639,8 +639,71 @@ class getUserInfoService(ServiceHandler):
 
 
 
+class getAptInfoService(ServiceHandler):
+        def get(self):
+            user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+            apt_name = self.request.get(IDENTIFIER_APT_NAME)
+
+            apt_lst = Apartment.query(Apartment.apt_name == apt_name).fetch()
+            cur_apt = None
+            for apt in apt_lst:
+                if user_email in apt.user_email_lst:
+                    cur_apt = apt
+            if cur_apt == None:
+                response = {}
+                response['error'] = 'the apt: ' + apt_name + ' is not available for user: ' + user_email
+                return self.respond(**response)
+
+            apt_name = cur_apt.apt_name
+            roomates_nickname_lst = cur_apt.get_all_memebers_nickname()
+            roomates_email_lst = cur_apt.user_email_lst
+            apt_id = cur_apt.apt_id
+            cover_url = cur_apt.cover_url
+
+            note_lst = []
+            notebook = cur_apt.get_Note_book()
+            notes_lst = notebook.getAllnotes()
+
+            for note in notes_lst:
+                cur_note = {}
+                cur_note['id'] = str(note.id)
+                cur_note['description'] = note.description
+                author_email = note.author_email
+                authors = User.query(User.user_email == author_email).fetch()
+                author = authors[0]
+                writer = author.nick_name
+                cur_note['writer'] = writer
+                cur_note['date'] = cur_note.date
+                note_lst.append(cur_note)
+            expenses_lst = []
+
+            expenses = cur_apt.getAllexpenses()
+
+            for expense in expenses:
+                cur_expense = {}
+                cur_expense['expense_id'] = str(expense.expense_id)
+                creater_email = expense.creater_email
+                creaters = User.query(User.user_email == creater_email).fetch()
+                creater = creaters[0]
+                creater_nick_name = creater.nick_name
+                cur_expense['creater_nickname'] = creater_nick_name
+                cur_expense['photo'] = expense.cover_url
+                cur_expense['date'] = str(expense.last_edit)
+                cur_expense['expense_name'] = expense.expense_name
+                cur_expense['sharer_lst'] = expense.user_email_lst
+                cur_expense['is_paid'] = expense.is_paid
+                cur_expense['the_number_of_items'] = len(expense.item_id_lst)
+                expenses_lst.append(cur_expense)
 
 
+            self.respond(roomates_email_lst = roomates_email_lst,
+                         roomates_nickname_lst = roomates_nickname_lst,
+                         apt_id = str(apt_id),
+                         apt_name = apt_name,
+                         cover_url = cover_url,
+                         notes_lst = note_lst,
+                         expenses_lst = expenses_lst,
+                         status="Success")
 
 
 
@@ -649,6 +712,7 @@ app = webapp2.WSGIApplication([
     ('/getUserInfo', getUserInfoService),
     ('/createAccount', CreateAccountService),
     ('/createApt', CreateAptService),
+    ('/getAptInfo', getAptInfoService),
     ('/createExpense', CreateExpenseService),
     ('/createItem', CreateItemService),
     ('/addUserToExpense', addUserToExpenseService),
