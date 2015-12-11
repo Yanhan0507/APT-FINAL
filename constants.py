@@ -17,6 +17,9 @@ IDENTIFIER_BUYER_EMAIL = 'buyer_email'
 
 IDENTIFIER_NICE_NAME = 'nick_name'
 
+
+IDENTIFIER_ITEM_ID = 'item_id'
+
 IDENTIFIER_BANK_ACCOUNT = 'bank_account'
 IDENTIFIER_USER_PHOTO = 'user_photo'
 
@@ -33,6 +36,8 @@ IDENTIFIER_DESCRIPTION_NAME = 'description'
 IDENTIFIER_NEW_DESCRIPTION_NAME = 'new_description'
 
 IDENTIFIER_NOTE_ID = 'note_id'
+
+IDENTIFIER_EXPENSE_ID = 'expense_id'
 
 IDENTIFIER_NEW_EMAIL = 'new_user'
 

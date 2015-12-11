@@ -36,8 +36,17 @@ class Expense(ndb.Model):
         ret_lst = []
         for item_id in self.item_id_lst:
             items = Item.query(Item.item_id == item_id).fetch()
-            item = items[0]
-            ret_lst.append(item)
+            if len(items) > 0:
+                item = items[0]
+                ret_lst.append(item)
+        return ret_lst
+
+    def getUserNickNameLst(self):
+        ret_lst = []
+        for user_email in self.user_email_lst:
+            users = User.query(User.user_email == user_email).fetch()
+            user = users[0]
+            ret_lst.append(user.nick_name)
         return ret_lst
 
     # def checkOutSingleItem(self, item_id):
@@ -119,7 +128,18 @@ class Item(ndb.Model):
         self.is_paid = True
         self.put()
 
+    def getBuyer(self):
+        buyers = User.query(User.user_email == self.buyer_email).fetch()
+        buyer = buyers[0]
+        return buyer.nick_name
 
+    def getSharersNickName(self):
+        ret_lst = []
+        for sharer_email in self.sharer_email_lst:
+            sharers = User.query(User.user_email == sharer_email).fetch()
+            sharer = sharers[0]
+            ret_lst.append(sharer.nick_name)
+        return ret_lst
 
 
 class Apartment(ndb.Model):

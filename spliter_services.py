@@ -673,7 +673,7 @@ class getAptInfoService(ServiceHandler):
                 author = authors[0]
                 writer = author.nick_name
                 cur_note['writer'] = writer
-                cur_note['date'] = cur_note.date
+                cur_note['date'] = str(note.date)
                 note_lst.append(cur_note)
             expenses_lst = []
 
@@ -706,6 +706,52 @@ class getAptInfoService(ServiceHandler):
                          status="Success")
 
 
+class getExpenseInfoService(ServiceHandler):
+        def get(self):
+            expense_id = self.request.get(IDENTIFIER_EXPENSE_ID )
+            expenses = Expense.query(Expense.expense_id == expense_id).fetch()
+            expense = expenses[0]
+            expense_name = expense.expense_name
+            items = expense.getAllItems()
+
+            expected_cost = 0.0
+            items_lst = []
+            is_paid = expense.is_paid
+            expense_user_lst = expense.getUserNickNameLst()
+            for item in items:
+                expected_cost += item.total_cost
+                cur_item = {}
+                cur_item['item_cost'] = item.total_cost
+                cur_item['is_paid'] = item.is_paid
+                cur_item['item_id'] = str(item.item_id)
+                cur_item['cover_url'] = item.cover_url
+                cur_item['buyer'] = item.getBuyer()
+                cur_item['sharer_lst'] = item.getSharersNickName()
+                cur_item['item_name'] = item.item_name
+                items_lst.append(cur_item)
+
+            self.respond(total_cost = expected_cost, items_lst = items_lst, is_paid = is_paid,
+                         expense_name = expense_name, expense_user_lst = expense_user_lst, status = 'Success')
+
+
+
+
+class getItemInfoService(ServiceHandler):
+        def get(self):
+            item_id = self.request.get(IDENTIFIER_ITEM_ID )
+            items = Item.query(Item.item_id == item_id).fetch()
+            item = items[0]
+
+            cur_item = {}
+            cur_item['item_cost'] = item.total_cost
+            cur_item['is_paid'] = item.is_paid
+            cur_item['item_id'] = str(item.item_id)
+            cur_item['cover_url'] = item.cover_url
+            cur_item['buyer'] = item.getBuyer()
+            cur_item['sharer_lst'] = item.getSharersNickName()
+            cur_item['item_name'] = item.item_name
+
+            self.respond(item = cur_item, status = 'Success')
 
 
 app = webapp2.WSGIApplication([
@@ -714,7 +760,9 @@ app = webapp2.WSGIApplication([
     ('/createApt', CreateAptService),
     ('/getAptInfo', getAptInfoService),
     ('/createExpense', CreateExpenseService),
+    ('/getExpenseInfo', getExpenseInfoService),
     ('/createItem', CreateItemService),
+    ('/getItemInfo', getItemInfoService),
     ('/addUserToExpense', addUserToExpenseService),
     ('/addUserToApt', addUserToAptService),
     ('/checkSingleExpense',checkSingleExpenseService),

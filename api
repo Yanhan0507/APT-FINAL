@@ -43,16 +43,15 @@ localhost:8090/createApt
 {"status":"Success","apt_id":"a669ba1b-2fbc-4991-8e30-8640589a4943"}
 
 
-get apartment information:
+Get apartment information:
 
 localhost:8090/getAptInfo?user_email=henry.com&apt_name=Trace2303
 
-{"roomates_nickname_lst":["henry","lucy","bob"],
-"roomates_email_lst":["henry.com","lucy.com","bob.com"],
-"notes_lst":[],
-"cover_url":null,"apt_name":"Trace2303",
-"expenses_lst":[{"sharer_lst":["bob.com","lucy.com","henry.com"],"date":"2015-12-11 07:44:57.935437","is_paid":false,"expense_id":"3a3a979c-679e-4696-b1c3-e8024a8f07d4","photo":null,"creater_nickname":"bob","expense_name":"visit to LA 2","the_number_of_items":0},{"sharer_lst":["henry.com","lucy.com","bob.com"],"date":"2015-12-11 07:44:42.258019","is_paid":false,"expense_id":"e9eafe0d-81ec-4873-9b7e-bbd0acde7f41","photo":null,"creater_nickname":"henry","expense_name":"visit to LA","the_number_of_items":0}],"apt_id":"17d9d5dd-dd1d-4958-80c2-f7d1684db089","status":"Success"}
-
+{"roomates_email_lst":["henry.com","lucy.com","bob.com"],"status":"Success","apt_name":"Trace2303","cover_url":null,
+"roomates_nickname_lst":["henry","lucy","bob"],
+"notes_lst":[{"id":"a775ba9c-6864-4329-8908-aad37f7ef51e","date":"2015-12-11 09:22:10.781536","writer":"henry","description":"LA is awesome!!"},{"id":"db0b8f0f-4d2c-4f97-95a3-a14c3894fba8","date":"2015-12-11 09:22:25.603998","writer":"lucy","description":"LA is not awesome at all!!"}],
+"apt_id":"4a35f062-1095-4412-9e37-ffa3ff58ee77",
+"expenses_lst":[{"photo":null,"expense_name":"visit to LA","date":"2015-12-11 09:20:55.304802","creater_nickname":"henry","the_number_of_items":2,"is_paid":false,"sharer_lst":["henry.com","lucy.com","bob.com"],"expense_id":"8f3c5f11-c4ee-494e-9092-18236ddb7a49"}]}
 
 Create Expense:
 localhost:8090/createExpense
@@ -64,6 +63,15 @@ localhost:8090/createExpense
 }
 {"status":"Success","expense_id":"c9e26cae-16f1-44cf-978a-a72014e8d1ea"}
 
+
+Get Expense:
+localhost:8090/getExpenseInfo?expense_id=8f3c5f11-c4ee-494e-9092-18236ddb7a49
+
+{"expense_name":"visit to LA","status":"Success",
+"expense_user_lst":["henry","lucy","bob"],
+"is_paid":false,
+"items_lst":[{"item_cost":386.2,"sharer_lst":["henry","bob"],"buyer":"lucy","is_paid":null,"item_name":"dinner together","cover_url":null,"item_id":"dd38bc40-3e54-40af-9937-1ddd56cb0054"},{"item_cost":986.2,"sharer_lst":["lucy","bob"],"buyer":"henry","is_paid":null,"item_name":"Flight AXA12 AUS-LA","cover_url":null,"item_id":"ccfab422-b939-46b7-a307-faaa185f99f8"}]
+,"total_cost":1372.4}
 
 Create Item under expense:
 localhost:8090/createItem
@@ -77,6 +85,13 @@ localhost:8090/createItem
 }
 
 {"status":"Success","item_id_id":"6f6e6bc1-57fb-4be2-ad3f-4db3dff7d133"}
+
+
+Get Item:
+localhost:8090/getItemInfo?item_id=dd38bc40-3e54-40af-9937-1ddd56cb0054
+
+{"item":{"buyer":"lucy","cover_url":null,"sharer_lst":["henry","bob"],"item_cost":386.2,"item_name":"dinner together","is_paid":null,"item_id":"dd38bc40-3e54-40af-9937-1ddd56cb0054"}
+,"status":"Success"}
 
 
 
