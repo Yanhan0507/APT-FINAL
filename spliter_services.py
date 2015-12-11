@@ -22,7 +22,7 @@ from constants import *
 import logging, json
 import uuid
 from datetime import datetime
-from model import User, Apartment, Expense, Item, Note, NoteBook
+from model import User, Apartment, Expense, Item, Note, NoteBook, Reply, Task
 
 class ServiceHandler(webapp2.RequestHandler):
     def respond(self, separators=(',', ':'), **response):
@@ -617,6 +617,23 @@ class getUserInfoService(ServiceHandler):
         owed = cur_user.borrow
         balance = cur_user.owe
 
+        tasks = cur_user.getAlltasks()
+        finished_task_lst = []
+        unfinished_task_lst = []
+
+        for task in tasks:
+            cur_task = {}
+            cur_task['task_id'] = task.task_id
+            cur_task['task_name'] = task.task_name
+            if task.finished:
+                finished_task_lst.append(cur_task)
+            else:
+                unfinished_task_lst.append(cur_task)
+
+        taskinfo = {}
+        task['finished_task_lst'] = finished_task_lst
+        task['unfinished_task_lst'] = unfinished_task_lst
+
         apt_id = cur_user.apt_id
 
         apts = Apartment.query(Apartment.apt_id == apt_id).fetch()
@@ -632,8 +649,11 @@ class getUserInfoService(ServiceHandler):
 
         usr_photo = cur_user.cover_url
 
+
+
+
         self.respond(usr_photo = usr_photo, bank_account = bank_account, nick_name = nick_name,
-                     user_email = user_email, owe = owe, owed = owed, balance = balance, apt_info = apt_info, status="Success")
+                     user_email = user_email, owe = owe, owed = owed, balance = balance, apt_info = apt_info, task_info = taskinfo, status="Success")
 
 
 
@@ -713,7 +733,7 @@ class getExpenseInfoService(ServiceHandler):
             expense = expenses[0]
             expense_name = expense.expense_name
             items = expense.getAllItems()
-
+            tasks = expense.getAllTasks()
             expected_cost = 0.0
             items_lst = []
             is_paid = expense.is_paid
@@ -730,9 +750,35 @@ class getExpenseInfoService(ServiceHandler):
                 cur_item['item_name'] = item.item_name
                 items_lst.append(cur_item)
 
-            self.respond(total_cost = expected_cost, items_lst = items_lst, is_paid = is_paid,
-                         expense_name = expense_name, expense_user_lst = expense_user_lst, status = 'Success')
+            finished_tasks_lst = []
+            unassigned_tasks_lst = []
+            assigned_tasks_lst = []
 
+            for task in tasks:
+                cur_task = {}
+                cur_task['photo'] = task.cover_url
+                cur_task['creater'] = task.getCreaterNickName()
+                cur_task['creater_email'] = task.creater_email
+                cur_task['task_name'] = task.task_name
+                cur_task['task_id'] = str(task.task_id)
+                if task.assigned:
+                    cur_task['person in charge'] = task.getChargerNickName()
+                    cur_task['person in charge email'] = task.charger_email
+                    if task.finished:
+                        finished_tasks_lst.append(cur_task)
+                    else:
+                        assigned_tasks_lst.append(cur_task)
+                else:
+                    unassigned_tasks_lst.append(cur_task)
+
+            task_info = {}
+            task_info['finished_tasks_lst'] = finished_tasks_lst
+            task_info['unassigned_tasks_lst'] = unassigned_tasks_lst
+            task_info['assigned_tasks_lst'] = assigned_tasks_lst
+
+            self.respond(total_cost = expected_cost, items_lst = items_lst, is_paid = is_paid,
+                         expense_name = expense_name, expense_user_lst = expense_user_lst,
+                         task_info = task_info, status = 'Success')
 
 
 
@@ -754,6 +800,182 @@ class getItemInfoService(ServiceHandler):
             self.respond(item = cur_item, status = 'Success')
 
 
+class addReplyService(ServiceHandler):
+        def post(self):
+            req_json = json.loads(self.request.body)
+            note_id = req_json[IDENTIFIER_NOTE_ID]
+            user_email = req_json[IDENTIFIER_USER_EMAIL]
+
+            description = req_json[IDENTIFIER_DESCRIPTION_NAME]
+
+            reply_id = uuid.uuid4()
+            notes = Note.query(Note.id == note_id).fetch()
+            note = notes[0]
+
+            user_lst = User.query(User.user_email == user_email).fetch()
+            user = user_lst[0]
+
+            new_reply = Reply(author_email = user_email,
+                              note_id = str(note_id),
+                              reply_id = str(reply_id),
+                              description = description,
+                              nick_name = user.nick_name
+                              )
+            new_reply.put()
+            note.reply_id_lst.append(str(reply_id))
+            note.put()
+
+            self.respond(reply_id = str(reply_id),
+                         status="Success")
+
+
+class getAllReplyService(ServiceHandler):
+    def get(self):
+        note_id = self.request.get(IDENTIFIER_NOTE_ID)
+        notes = Note.query(Note.id == note_id).fetch()
+        note = notes[0]
+
+        replys = note.getAllreply()
+        reply_lst = []
+
+        sorted_replys = sorted(replys, key=lambda reply:reply.date)
+
+        for reply in sorted_replys:
+            cur_reply = {}
+            cur_reply['author'] = reply.nick_name
+            cur_reply['author_email'] = reply.author_email
+            cur_reply['description'] = reply.description
+            cur_reply['reply_id'] = str(reply.reply_id)
+            cur_reply['date'] = str(reply.date)
+            reply_lst.append(cur_reply)
+
+        self.respond(reply_lst = reply_lst,
+                         status="Success")
+
+
+
+
+class createTaskService(ServiceHandler):
+    def post(self):
+        task_id = uuid.uuid4()
+        req_json = json.loads(self.request.body)
+
+        task_name = req_json[IDENTIFIER_TASK_NAME]
+        expense_id = req_json[IDENTIFIER_EXPENSE_ID]
+        creater_email = req_json[IDENTIFIER_USER_EMAIL]
+        candidate_lst= req_json[IDENTIFIER_USER_EMAIL_LIST]
+        description = req_json[IDENTIFIER_DESCRIPTION_NAME]
+        photo = None
+        if IDENTIFIER_TASK_PHOTO in req_json:
+            photo = req_json[IDENTIFIER_TASK_PHOTO]
+        candidate_lst.append(creater_email)
+        expenses = Expense.query(Expense.expense_id == expense_id).fetch()
+        expense = expenses[0]
+        expense.task_id_lst.append(str(task_id))
+        expense.put()
+        new_task = Task(task_name = task_name, expense_id = expense_id, creater_email = creater_email,
+                        candidate_lst = candidate_lst, description = description, cover_url = photo, task_id = str(task_id),
+                        finished = False, assigned = False)
+        new_task.put()
+
+        self.respond(task_id = str(task_id),
+                         status="Success")
+
+class pickTaskService(ServiceHandler):
+    def get(self):
+        task_id = self.request.get(IDENTIFIER_TASK_ID)
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+
+        tasks = Task.query(Task.task_id == task_id).fetch()
+        task = tasks[0]
+
+        if not user_email in task.candidate_lst:
+            response = {}
+            response['error'] = 'the email: ' + user_email + ' is not valid for this task'
+            return self.respond(**response)
+
+        users = User.query(User.user_email == user_email).fetch()
+        user = users[0]
+        user.tasks_list.append(task_id)
+        user.put()
+        task.assigned = True
+        task.charger_email = user_email
+        task.put()
+
+        self.respond(status="Success")
+
+class finishTaskService(ServiceHandler):
+    def get(self):
+        task_id = self.request.get(IDENTIFIER_TASK_ID)
+        total_cost = self.request.get(IDENTIFIER_TOTAL_COST)
+
+        total_cost = float(total_cost)
+
+        tasks = Task.query(Task.task_id == task_id).fetch()
+        task = tasks[0]
+
+        if task.finished:
+            response = {}
+            response['error'] = 'the task has already been finished'
+            return self.respond(**response)
+        task.finished = True
+        task.put()
+        item_id = str(uuid.uuid4())
+        sharer_lst = task.candidate_lst
+        sharer_lst.remove(task.charger_email)
+
+
+
+        new_Item = Item(item_id = item_id, cover_url = task.cover_url, expense_id = task.expense_id,
+                        total_cost = total_cost,
+                        buyer_email = task.charger_email,
+                        sharer_email_lst = sharer_lst,
+                        item_name = task.task_name)
+
+        new_Item.put()
+
+        self.respond(item_name = task.task_name, item_id = task.task_id, status="Success")
+
+
+class getAllTaskService(ServiceHandler):
+    def get(self):
+        expense_id = self.request.get(IDENTIFIER_EXPENSE_ID)
+        expenses = Expense.query(Expense.expense_id == expense_id).fetch()
+        expense = expenses[0]
+
+        unassigned_tasks_lst = []
+        assigned_tasks_lst = []
+        finished_tasks_lst = []
+
+        tasks = expense.getAllTasks()
+
+        for task in tasks:
+            cur_task = {}
+            cur_task['photo'] = task.cover_url
+            cur_task['creater'] = task.getCreaterNickName()
+            cur_task['creater_email'] = task.creater_email
+            cur_task['task_name'] = task.task_name
+            cur_task['task_id'] = str(task.task_id)
+            if task.assigned:
+                cur_task['person in charge'] = task.getChargerNickName()
+                cur_task['person in charge email'] = task.charger_email
+                if task.finished:
+                    finished_tasks_lst.append(cur_task)
+                else:
+                    assigned_tasks_lst.append(cur_task)
+            else:
+                unassigned_tasks_lst.append(cur_task)
+
+        task_info = {}
+        task_info['finished_tasks_lst'] = finished_tasks_lst
+        task_info['unassigned_tasks_lst'] = unassigned_tasks_lst
+        task_info['assigned_tasks_lst'] = assigned_tasks_lst
+
+        self.respond(task_info = task_info, status="Success")
+
+
+
+
 app = webapp2.WSGIApplication([
     ('/getUserInfo', getUserInfoService),
     ('/createAccount', CreateAccountService),
@@ -763,6 +985,15 @@ app = webapp2.WSGIApplication([
     ('/getExpenseInfo', getExpenseInfoService),
     ('/createItem', CreateItemService),
     ('/getItemInfo', getItemInfoService),
+
+    ('/addReply', addReplyService),
+    ('/getAllReply', getAllReplyService),
+
+    ('/createTask', createTaskService),
+    ('/pickTask', pickTaskService),
+    ('/finishTask', finishTaskService),
+    ('/getAllTask', getAllTaskService),
+
     ('/addUserToExpense', addUserToExpenseService),
     ('/addUserToApt', addUserToAptService),
     ('/checkSingleExpense',checkSingleExpenseService),

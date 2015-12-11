@@ -40,5 +40,12 @@ IDENTIFIER_NOTE_ID = 'note_id'
 IDENTIFIER_EXPENSE_ID = 'expense_id'
 
 IDENTIFIER_NEW_EMAIL = 'new_user'
+IDENTIFIER_ITEM_ID = 'reply_id'
+
+
+IDENTIFIER_TASK_NAME = 'task_name'
+IDENTIFIER_TASK_ID = 'task_id'
+
+IDENTIFIER_TASK_PHOTO = 'task_photo'
 
 INITIAL_BALANCE = 0

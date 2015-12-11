@@ -10,7 +10,10 @@ class Expense(ndb.Model):
     apt_id = ndb.StringProperty()
     creater_email = ndb.StringProperty()
     user_email_lst = ndb.StringProperty(repeated=True)
+
     item_id_lst = ndb.StringProperty(repeated=True)
+    task_id_lst = ndb.StringProperty(repeated=True)
+
     is_paid = ndb.BooleanProperty()
     expense_id = ndb.StringProperty()
     expense_name = ndb.StringProperty()
@@ -49,6 +52,14 @@ class Expense(ndb.Model):
             ret_lst.append(user.nick_name)
         return ret_lst
 
+    def getAllTasks(self):
+        ret_lst = []
+        for task_id in self.task_id_lst:
+            tasks = Task.query(Task.task_id == task_id).fetch()
+            if len(tasks) > 0:
+                task = tasks[0]
+                ret_lst.append(task)
+        return ret_lst
     # def checkOutSingleItem(self, item_id):
 
 class NoteBook(ndb.Model):
@@ -73,12 +84,26 @@ class NoteBook(ndb.Model):
             ret_lst.append(note)
         return ret_lst
 
+
+
 class Note(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add=True)
-    author_email = ndb.StringProperty()
     description = ndb.StringProperty()
     id = ndb.StringProperty()
     notebook_id = ndb.StringProperty()
+    author_email = ndb.StringProperty()
+
+
+    reply_id_lst = ndb.StringProperty(repeated=True)
+
+    def getAllreply(self):
+        ret_lst = []
+        for reply_id in self.reply_id_lst:
+            replys = Reply.query(Reply.reply_id == reply_id).fetch()
+            reply = replys[0]
+            ret_lst.append(reply)
+        return ret_lst
+
 
     def show(self):
         author_lst = User.query(User.user_email == self.author_email)
@@ -91,9 +116,37 @@ class Note(ndb.Model):
         dict["description"] = self.description
         dict["last_edit_time"] = self.date
 
+class Reply(ndb.Model):
+    note_id = ndb.StringProperty()
+    reply_id = ndb.StringProperty()
+    author_email = ndb.StringProperty()
+    nick_name = ndb.StringProperty()
+    description = ndb.StringProperty()
+    date = ndb.DateTimeProperty(auto_now_add=True)
 
 
+class Task(ndb.Model):
+    candidate_lst = ndb.StringProperty(repeated=True)
+    expense_id = ndb.StringProperty()
+    task_id = ndb.StringProperty()
+    task_name = ndb.StringProperty()
+    cover_url = ndb.StringProperty()
+    creater_email = ndb.StringProperty()
+    description = ndb.StringProperty()
 
+    assigned = ndb.BooleanProperty()
+    charger_email = ndb.StringProperty()
+    finished = ndb.BooleanProperty()
+
+    def getChargerNickName(self):
+        chargers = User.query(User.user_email == self.charger_email).fetch()
+        charger = chargers[0]
+        return charger.nick_name
+
+    def getCreaterNickName(self):
+        creaters = User.query(User.user_email == self.creater_email).fetch()
+        creater = creaters[0]
+        return creater.nick_name
 
 class Item(ndb.Model):
     item_id = ndb.StringProperty()
@@ -198,7 +251,15 @@ class User(ndb.Model):
 
      owe = ndb.FloatProperty()
      cover_url = ndb.StringProperty()
-     todo_list = ndb.StringProperty(repeated=True)
+     tasks_list = ndb.StringProperty(repeated=True)
+
+     def getAlltasks(self):
+         ret_lst = []
+         for task_id in self.tasks_list:
+             tasks = Task.query(task_id == task_id).fetch()
+             task = tasks[0]
+             ret_lst.append(task)
+         return ret_lst
 
 
 # class payment(ndb.Model):
