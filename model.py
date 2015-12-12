@@ -62,6 +62,7 @@ class Expense(ndb.Model):
         return ret_lst
     # def checkOutSingleItem(self, item_id):
 
+
 class NoteBook(ndb.Model):
     notebook_id = ndb.StringProperty()
     apt_id = ndb.StringProperty()
@@ -83,7 +84,6 @@ class NoteBook(ndb.Model):
             note = notes[0]
             ret_lst.append(note)
         return ret_lst
-
 
 
 class Note(ndb.Model):
@@ -115,6 +115,7 @@ class Note(ndb.Model):
             dict["author_name"] = author_name
         dict["description"] = self.description
         dict["last_edit_time"] = self.date
+
 
 class Reply(ndb.Model):
     note_id = ndb.StringProperty()
@@ -148,6 +149,7 @@ class Task(ndb.Model):
         creater = creaters[0]
         return creater.nick_name
 
+
 class Item(ndb.Model):
     item_id = ndb.StringProperty()
     is_paid = ndb.BooleanProperty()
@@ -161,7 +163,6 @@ class Item(ndb.Model):
     def checkout(self):
         num_of_user = len(self.sharer_email_lst) + 1
         payment = self.total_cost/num_of_user
-
 
         buyer_lst = User.query(User.user_email == self.buyer_email).fetch()
         buyer = buyer_lst[0]

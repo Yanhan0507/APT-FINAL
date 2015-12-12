@@ -92,11 +92,16 @@ class CreateAptService(ServiceHandler):
         user_emails = self.request.get(IDENTIFIER_USER_EMAIL_LIST)
 
         user_email_lst = user_emails.split(",")
-        user_email_lst.insert(0, user_email)
         cover_url = None
 
-        print user_email_lst
+        user_email_lst.insert(0, user_email)
 
+        # get rid of empty entity
+        print("user_email_lst before filtering" + str(user_email_lst))
+        user_email_lst = filter(None, user_email_lst)
+        print("user_email_lst after filtering" + str(user_email_lst))
+
+        # print user_email_lst
 
         # if IDENTIFIER_APT_PHOTO in req_json:
         #     cover_url = req_json[IDENTIFIER_APT_PHOTO]
@@ -104,8 +109,9 @@ class CreateAptService(ServiceHandler):
         # check whether all of these email are valid users
         for user in user_email_lst:
             print user
-            user = user.encode('utf8')
+            # user = user.encode('utf8')
             users = User.query(User.user_email == user).fetch()
+            print("query user result" + str(len(users)))
             if len(users) == 0:
                 response = {}
                 response['error'] = 'the email: ' + user + ' has not been registered'
@@ -146,7 +152,7 @@ class GetAptBasicInfoService(ServiceHandler):
          apts = Apartment.query(Apartment.apt_id == apt_id).fetch()
          if apts[0]:
              apt = apts[0]
-             self.respond(status="success", apt_id=apt.apt_id, apt_name=apt.apt_name, creater_email = apt.user_email_lst, user_email_lst=apt.user_email_lst)
+             self.respond(status="success", apt_id=apt.apt_id, apt_name=apt.apt_name, creater_email=apt.user_email_lst, user_email_lst=apt.user_email_lst)
          else:
              print("cannot find the apartment with id :" + apt_id)
              self.respond(status="fail", error_msg="cannot find the apartment with id :" + apt_id)
@@ -670,12 +676,14 @@ class getUserInfoService(ServiceHandler):
             response['error'] = 'the email: ' + user_email + ' has not registered yet'
             return self.respond(**response)
 
-        cur_user = users [0]
+        cur_user = users[0]
         bank_account = cur_user.bank_account
         nick_name = cur_user.nick_name
         owe = cur_user.cost
         owed = cur_user.borrow
         balance = cur_user.owe
+
+        print("user information collected. e.g. bankaccount="+bank_account)
 
         tasks = cur_user.getAlltasks()
         finished_task_lst = []
@@ -694,6 +702,8 @@ class getUserInfoService(ServiceHandler):
         taskinfo['finished_task_lst'] = finished_task_lst
         taskinfo['unfinished_task_lst'] = unfinished_task_lst
 
+        print("task collected")
+
         apt_id = cur_user.apt_id
 
         apts = Apartment.query(Apartment.apt_id == apt_id).fetch()
@@ -706,17 +716,13 @@ class getUserInfoService(ServiceHandler):
             apt_info['roommates_lst'] = apt.get_all_memebers_nickname()
             apt_info['apt_photo'] = apt.cover_url
 
+        # usr_photo = cur_user.cover_url
 
-        usr_photo = cur_user.cover_url
+        print("apartment information collected. now respond.")
 
-
-
-
-        self.respond(usr_photo = usr_photo, bank_account = bank_account, nick_name = nick_name,
-                     user_email = user_email, owe = owe, owed = owed, balance = balance, apt_info = apt_info, task_info = taskinfo, status="Success")
-
-
-
+        self.respond(status="Success", bank_account=bank_account, nick_name = nick_name,
+                     user_email = user_email, owe=owe, owed = owed, balance = balance, apt_info = apt_info,
+                     task_info = taskinfo, registered=True)
 
 
 class getAptInfoService(ServiceHandler):
@@ -785,13 +791,43 @@ class getAptInfoService(ServiceHandler):
                          expenses_lst = expenses_lst,
                          status="Success")
 
+# Added by liuchg
+class getExpenseListService(ServiceHandler):
+    def get(self):
+        apt_id = self.request.get(IDENTIFIER_APT_ID)
+        print "getExpenseListService, apt_id="+apt_id
+        expenses_lst = []
+        apt_lst = Apartment.query(Apartment.apt_id == apt_id).fetch()
+        if len(apt_lst)!=0 :
+            apt = apt_lst[0]
+            expenses = apt.getAllexpenses()
+            if len(expenses)!=0:
+                for expense in expenses:
+                    cur_expense = {}
+                    cur_expense['expense_id'] = str(expense.expense_id)
+                    creater_email = expense.creater_email
+                    creaters = User.query(User.user_email == creater_email).fetch()
+                    creater = creaters[0]
+                    creater_nick_name = creater.nick_name
+                    cur_expense['creater_nickname'] = creater_nick_name
+                    cur_expense['photo'] = expense.cover_url
+                    cur_expense['date'] = str(expense.last_edit)
+                    cur_expense['expense_name'] = expense.expense_name
+                    cur_expense['sharer_lst'] = expense.user_email_lst
+                    cur_expense['is_paid'] = expense.is_paid
+                    cur_expense['the_number_of_items'] = len(expense.item_id_lst)
+                    cur_expense['total_cost'] = expense.total_cost
+                    cur_expense['approval_cost'] = expense.approval_cost
+                    expenses_lst.append(cur_expense)
+        self.respond(status="success", expenses_lst=expenses_lst)
+
 
 class getExpenseInfoService(ServiceHandler):
         def get(self):
 
             expense_id = self.request.get(IDENTIFIER_EXPENSE_ID)
 
-            print "expense_id       :" + expense_id
+            print "expense_id :" + expense_id
 
             expenses = Expense.query(Expense.expense_id == expense_id).fetch()
             expense = expenses[0]
@@ -1059,7 +1095,7 @@ class getAllTaskService(ServiceHandler):
         task_info['unassigned_tasks_lst'] = unassigned_tasks_lst
         task_info['assigned_tasks_lst'] = assigned_tasks_lst
 
-        self.respond(task_info = task_info, status="Success")
+        self.respond(task_info=task_info, status="Success")
 
 def removeQuote(str):
     str.replace('"','')
@@ -1071,6 +1107,7 @@ app = webapp2.WSGIApplication([
     ('/createAccount', CreateAccountService),
     ('/createApt', CreateAptService),
     ('/getBasicAptInfo', GetAptBasicInfoService), #newly added
+    ('/getExpenseList', getExpenseListService), #newly added
     ('/getAptInfo', getAptInfoService),
     ('/createExpense', CreateExpenseService),
     ('/getExpenseInfo', getExpenseInfoService),
