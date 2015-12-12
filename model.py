@@ -189,6 +189,7 @@ class Item(ndb.Model):
     def getSharersNickName(self):
         ret_lst = []
         for sharer_email in self.sharer_email_lst:
+            print "sharer email   :"  + sharer_email
             sharers = User.query(User.user_email == sharer_email).fetch()
             sharer = sharers[0]
             ret_lst.append(sharer.nick_name)

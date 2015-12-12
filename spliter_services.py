@@ -40,12 +40,13 @@ class ServiceHandler(webapp2.RequestHandler):
 
 
 class CreateAccountService(ServiceHandler):
-    def post(self):
+    def get(self):
 
-        req_json = json.loads(self.request.body)
+        # req_json = json.loads(self.request.body)
 
 
-        user_email = req_json[IDENTIFIER_USER_EMAIL]
+        # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
 
         # check whether this email has been used or not
         users = User.query(User.user_email == user_email).fetch()
@@ -54,15 +55,16 @@ class CreateAccountService(ServiceHandler):
             response['error'] = 'the email: ' + user_email + ' has already been used'
             return self.respond(**response)
 
-        nick_name = req_json[IDENTIFIER_NICE_NAME]
+        # nick_name = req_json[IDENTIFIER_NICE_NAME]
+        nick_name = self.request.get(IDENTIFIER_USER_EMAIL)
         # bank_account and user photo are not required
         bank_account = None
         cover_url = None
-        if IDENTIFIER_BANK_ACCOUNT in req_json:
-            bank_account = req_json[IDENTIFIER_BANK_ACCOUNT]
-        if IDENTIFIER_USER_PHOTO in req_json:
-            cover_url = req_json[IDENTIFIER_USER_PHOTO]
-
+        # if IDENTIFIER_BANK_ACCOUNT in req_json:
+        #     bank_account = req_json[IDENTIFIER_BANK_ACCOUNT]
+        # if IDENTIFIER_USER_PHOTO in req_json:
+        #     cover_url = req_json[IDENTIFIER_USER_PHOTO]
+        bank_account = self.request.get(IDENTIFIER_BANK_ACCOUNT)
         new_user = User(user_email = user_email,
                         nick_name = nick_name,
                         bank_account = bank_account,
@@ -77,22 +79,31 @@ class CreateAccountService(ServiceHandler):
         self.respond(user_email=user_email, status="Success")
 
 class CreateAptService(ServiceHandler):
-    def post(self):
+    def get(self):
         apt_id = uuid.uuid4()
-        req_json = json.loads(self.request.body)
+        # req_json = json.loads(self.request.body)
 
-        apt_name = req_json[IDENTIFIER_APT_NAME]
-        user_email = req_json[IDENTIFIER_USER_EMAIL]
+        # apt_name = req_json[IDENTIFIER_APT_NAME]
+        apt_name = self.request.get(IDENTIFIER_APT_NAME)
+        # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
 
-        user_email_lst = req_json[IDENTIFIER_USER_EMAIL_LIST]
+        # user_email_lst = req_json[IDENTIFIER_USER_EMAIL_LIST]
+        user_emails = self.request.get(IDENTIFIER_USER_EMAIL_LIST)
+
+        user_email_lst = user_emails.split(",")
         user_email_lst.insert(0, user_email)
-
         cover_url = None
-        if IDENTIFIER_APT_PHOTO in req_json:
-            cover_url = req_json[IDENTIFIER_APT_PHOTO]
+
+        print user_email_lst
+
+
+        # if IDENTIFIER_APT_PHOTO in req_json:
+        #     cover_url = req_json[IDENTIFIER_APT_PHOTO]
 
         # check whether all of these email are valid users
         for user in user_email_lst:
+            print user
             user = user.encode('utf8')
             users = User.query(User.user_email == user).fetch()
             if len(users) == 0:
@@ -131,14 +142,20 @@ class CreateAptService(ServiceHandler):
 
 
 class CreateExpenseService(ServiceHandler):
-    def post(self):
+    def get(self):
         expense_id = uuid.uuid4()
-        req_json = json.loads(self.request.body)
+        # req_json = json.loads(self.request.body)
 
-        expense_name = req_json[IDENTIFIER_EXPENSE_NAME ]
-        user_email = req_json[IDENTIFIER_USER_EMAIL]
+        # expense_name = req_json[IDENTIFIER_EXPENSE_NAME ]
+        expense_name = self.request.get(IDENTIFIER_EXPENSE_NAME)
+        # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
 
-        apt_name = req_json[IDENTIFIER_APT_NAME]
+        # apt_name = req_json[IDENTIFIER_APT_NAME]
+        apt_name = self.request.get(IDENTIFIER_APT_NAME)
+
+        user_emails = self.request.get(IDENTIFIER_USER_LIST)
+        user_email_lst = user_emails.split(",")
 
         target_apt_lst = Apartment.query(Apartment.apt_name == apt_name).fetch()
 
@@ -153,7 +170,7 @@ class CreateExpenseService(ServiceHandler):
             response['error'] = 'the user: ' + user_email + ' is not valid for apt: ' + apt_name
             return self.respond(**response)
 
-        user_email_lst = req_json[IDENTIFIER_USER_LIST ]
+
         user_email_lst.insert(0, user_email)
 
 
@@ -177,8 +194,8 @@ class CreateExpenseService(ServiceHandler):
 
 
         cover_url = None
-        if IDENTIFIER_APT_PHOTO in req_json:
-            cover_url = req_json[IDENTIFIER_APT_PHOTO]
+        # if IDENTIFIER_APT_PHOTO in req_json:
+        #     cover_url = req_json[IDENTIFIER_APT_PHOTO]
 
 
         new_expense = Expense(apt_id = target_apt.apt_id,
@@ -197,23 +214,37 @@ class CreateExpenseService(ServiceHandler):
 
 
 class CreateItemService(ServiceHandler):
-    def post(self):
-        item_id = uuid.uuid4()
-        req_json = json.loads(self.request.body)
+    def get(self):
 
-        item_name = req_json[IDENTIFIER_ITEM_NAME]
-        expense_name = req_json[IDENTIFIER_EXPENSE_NAME]
-        buyer_email = req_json[IDENTIFIER_BUYER_EMAIL]
-        sharer_email_lst = req_json[IDENTIFIER_SHARER_LIST]
+        cover_url = None
+        # if IDENTIFIER_ITEM_PHOTO in req_json:
+        #     cover_url = req_json[IDENTIFIER_ITEM_PHOTO]
+
+        item_id = uuid.uuid4()
+        # req_json = json.loads(self.request.body)
+
+        # item_name = req_json[IDENTIFIER_ITEM_NAME]
+        item_name = self.request.get(IDENTIFIER_ITEM_NAME)
+
+        # expense_name = req_json[IDENTIFIER_EXPENSE_NAME]
+        expense_name = self.request.get(IDENTIFIER_EXPENSE_NAME)
+
+        # buyer_email = req_json[IDENTIFIER_BUYER_EMAIL]
+        buyer_email = self.request.get(IDENTIFIER_BUYER_EMAIL)
+
+        # sharer_email_lst = req_json[IDENTIFIER_SHARER_LIST]
+        sharer_emails = self.request.get(IDENTIFIER_SHARER_LIST)
+        sharer_email_lst = sharer_emails.split(",")
 
         expense_lst = Expense.query(Expense.expense_name == expense_name)
         expense_id = None
 
-        total_cost = float(req_json[IDENTIFIER_TOTAL_COST])
+        # total_cost = float(req_json[IDENTIFIER_TOTAL_COST])
+        total_cost = float(self.request.get(IDENTIFIER_TOTAL_COST))
+
+
         target_expense = None
-        cover_url = None
-        if IDENTIFIER_ITEM_PHOTO in req_json:
-            cover_url = req_json[IDENTIFIER_ITEM_PHOTO]
+
 
         for expense in expense_lst:
             if buyer_email in expense.user_email_lst:
@@ -244,13 +275,18 @@ class CreateItemService(ServiceHandler):
 
 
 class addUserToAptService(ServiceHandler):
-    def post(self):
+    def get(self):
 
-        req_json = json.loads(self.request.body)
+        # req_json = json.loads(self.request.body)
 
-        apt_name = req_json[IDENTIFIER_APT_NAME]
-        user_email = req_json[IDENTIFIER_USER_EMAIL]
-        new_email = req_json[IDENTIFIER_NEW_EMAIL]
+        # apt_name = req_json[IDENTIFIER_APT_NAME]
+        apt_name = self.request.get(IDENTIFIER_APT_NAME)
+
+        # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+
+        # new_email = req_json[IDENTIFIER_NEW_EMAIL]
+        new_email = self.request.get(IDENTIFIER_NEW_EMAIL)
 
         apt_lst = Apartment.query(Apartment.apt_name == apt_name)
         target_apt = None
@@ -287,12 +323,20 @@ class addUserToAptService(ServiceHandler):
 
 
 class addUserToExpenseService(ServiceHandler):
-    def post(self):
+    def get(self):
 
-        req_json = json.loads(self.request.body)
-        expense_name = req_json[IDENTIFIER_EXPENSE_NAME]
-        user_email = req_json[IDENTIFIER_USER_EMAIL]
-        new_sharer_email = req_json[IDENTIFIER_NEW_EMAIL]
+        # req_json = json.loads(self.request.body)
+        # expense_name = req_json[IDENTIFIER_EXPENSE_NAME]
+        expense_name = self.request.get(IDENTIFIER_EXPENSE_NAME)
+
+        # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+
+
+        # new_sharer_email = req_json[IDENTIFIER_NEW_EMAIL]
+        new_sharer_email = self.request.get(IDENTIFIER_NEW_EMAIL)
+
+
 
         target_expense = None
 
@@ -445,12 +489,15 @@ class getPaymentService(ServiceHandler):
 
 
 class addNoteService(ServiceHandler):
-    def post(self):
+    def get(self):
 
-        req_json = json.loads(self.request.body)
-        user_email = req_json[IDENTIFIER_USER_EMAIL]
-        apt_name = req_json[IDENTIFIER_APT_NAME]
-        description = req_json[IDENTIFIER_DESCRIPTION_NAME]
+        # req_json = json.loads(self.request.body)
+        # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+        # apt_name = req_json[IDENTIFIER_APT_NAME]
+        apt_name =  self.request.get(IDENTIFIER_APT_NAME)
+        # description = req_json[IDENTIFIER_DESCRIPTION_NAME]
+        description = self.request.get(IDENTIFIER_DESCRIPTION_NAME)
 
         apt_lst = Apartment.query(Apartment.apt_name == apt_name).fetch()
 
@@ -488,12 +535,15 @@ class addNoteService(ServiceHandler):
 
 
 class editNoteService(ServiceHandler):
-    def post(self):
+    def get(self):
 
-        req_json = json.loads(self.request.body)
-        user_email = req_json[IDENTIFIER_USER_EMAIL]
-        note_id = req_json[IDENTIFIER_NOTE_ID]
-        new_description = req_json[IDENTIFIER_NEW_DESCRIPTION_NAME]
+        # req_json = json.loads(self.request.body)
+        # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+        # note_id = req_json[IDENTIFIER_NOTE_ID]
+        note_id = self.request.get(IDENTIFIER_NOTE_ID)
+        # new_description = req_json[IDENTIFIER_NEW_DESCRIPTION_NAME]
+        new_description = self.request.get(IDENTIFIER_NEW_DESCRIPTION_NAME)
 
         cur_note_lst = Note.query(Note.id == note_id).fetch()
 
@@ -631,8 +681,8 @@ class getUserInfoService(ServiceHandler):
                 unfinished_task_lst.append(cur_task)
 
         taskinfo = {}
-        task['finished_task_lst'] = finished_task_lst
-        task['unfinished_task_lst'] = unfinished_task_lst
+        taskinfo['finished_task_lst'] = finished_task_lst
+        taskinfo['unfinished_task_lst'] = unfinished_task_lst
 
         apt_id = cur_user.apt_id
 
@@ -728,7 +778,11 @@ class getAptInfoService(ServiceHandler):
 
 class getExpenseInfoService(ServiceHandler):
         def get(self):
-            expense_id = self.request.get(IDENTIFIER_EXPENSE_ID )
+
+            expense_id = self.request.get(IDENTIFIER_EXPENSE_ID)
+
+            print "expense_id       :" + expense_id
+
             expenses = Expense.query(Expense.expense_id == expense_id).fetch()
             expense = expenses[0]
             expense_name = expense.expense_name
@@ -784,7 +838,9 @@ class getExpenseInfoService(ServiceHandler):
 
 class getItemInfoService(ServiceHandler):
         def get(self):
-            item_id = self.request.get(IDENTIFIER_ITEM_ID )
+            item_id = self.request.get(IDENTIFIER_ITEM_ID)
+            print "111111111111111121111"
+            print item_id
             items = Item.query(Item.item_id == item_id).fetch()
             item = items[0]
 
@@ -801,12 +857,14 @@ class getItemInfoService(ServiceHandler):
 
 
 class addReplyService(ServiceHandler):
-        def post(self):
-            req_json = json.loads(self.request.body)
-            note_id = req_json[IDENTIFIER_NOTE_ID]
-            user_email = req_json[IDENTIFIER_USER_EMAIL]
-
-            description = req_json[IDENTIFIER_DESCRIPTION_NAME]
+        def get(self):
+            # req_json = json.loads(self.request.body)
+            # note_id = req_json[IDENTIFIER_NOTE_ID]
+            note_id = self.request.get(IDENTIFIER_NOTE_ID)
+            # user_email = req_json[IDENTIFIER_USER_EMAIL]
+            user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+            # description = req_json[IDENTIFIER_DESCRIPTION_NAME]
+            description = self.request.get(IDENTIFIER_DESCRIPTION_NAME)
 
             reply_id = uuid.uuid4()
             notes = Note.query(Note.id == note_id).fetch()
@@ -856,18 +914,33 @@ class getAllReplyService(ServiceHandler):
 
 
 class createTaskService(ServiceHandler):
-    def post(self):
-        task_id = uuid.uuid4()
-        req_json = json.loads(self.request.body)
+    def get(self):
 
-        task_name = req_json[IDENTIFIER_TASK_NAME]
-        expense_id = req_json[IDENTIFIER_EXPENSE_ID]
-        creater_email = req_json[IDENTIFIER_USER_EMAIL]
-        candidate_lst= req_json[IDENTIFIER_USER_EMAIL_LIST]
-        description = req_json[IDENTIFIER_DESCRIPTION_NAME]
         photo = None
-        if IDENTIFIER_TASK_PHOTO in req_json:
-            photo = req_json[IDENTIFIER_TASK_PHOTO]
+        # if IDENTIFIER_TASK_PHOTO in req_json:
+        #     photo = req_json[IDENTIFIER_TASK_PHOTO]
+
+
+        task_id = uuid.uuid4()
+
+        # req_json = json.loads(self.request.body)
+
+        # task_name = req_json[IDENTIFIER_TASK_NAME]
+        task_name = self.request.get(IDENTIFIER_TASK_NAME)
+
+        # expense_id = req_json[IDENTIFIER_EXPENSE_ID]
+        expense_id = self.request.get(IDENTIFIER_EXPENSE_ID)
+
+        # creater_email = req_json[IDENTIFIER_USER_EMAIL]
+        creater_email = self.request.get(IDENTIFIER_USER_EMAIL)
+
+        # candidate_lst= req_json[IDENTIFIER_USER_EMAIL_LIST]
+        candidates = self.request.get(IDENTIFIER_USER_EMAIL_LIST)
+        candidate_lst = candidates.split(",")
+
+        # description = req_json[IDENTIFIER_DESCRIPTION_NAME]
+        description = self.request.get(IDENTIFIER_DESCRIPTION_NAME)
+
         candidate_lst.append(creater_email)
         expenses = Expense.query(Expense.expense_id == expense_id).fetch()
         expense = expenses[0]
@@ -978,7 +1051,9 @@ class getAllTaskService(ServiceHandler):
 
         self.respond(task_info = task_info, status="Success")
 
-
+def removeQuote(str):
+    str.replace('"','')
+    return str
 
 
 app = webapp2.WSGIApplication([

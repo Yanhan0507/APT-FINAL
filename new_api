@@ -1,0 +1,154 @@
+
+rules:
+u need to register an account before using this service
+each user_email has to belong to exactly one apartment
+you can add expense to apartment
+you can add item to expense
+the money u owe/owed will not be calculated until any apartment member check outexpense(s)
+if you want to get the optimized way to create payment (minimize the number of total transfers), u can simply use the api: /getPayment
+
+
+Create an account:
+localhost:8090/createAccount?nick_name=lucy&user_email=lucy.com&bank_account=123456
+
+Get user infomation (log in )
+localhost:8090/getUserInfo?user_email=henry.com
+
+response:
+if the user has not registered yet:
+{"error":"the email: Henry.com has not registered yet"}
+
+if the user has not been assigned to apartment yet: (apt_info will be empty)
+{"status":"Success","owe":0.0,"usr_photo":null,"balance":0.0,"nick_name":"Henry","owed":0.0,"user_email":"Henry.com","apt_info":{},"bank_account":"123456"}
+
+if the user has registered the account and has been assigned to one apartment:
+{"bank_account":"123456","owe":0.0,"owed":0.0,"apt_info":{"roommates_lst":["henry","lucy","bob"],"apt_photo":null,"apt_name":"Trace2303","apt_id":"17d9d5dd-dd1d-4958-80c2-f7d1684db089"},"user_email":"henry.com","usr_photo":null,"nick_name":"henry","status":"Success","balance":0.0}
+
+
+
+Create Apartment:
+localhost:8090/createApt?apt_name=Trace2303&user_email=henry.com&user_email_lst=lucy.com,bob.com
+
+{"status":"Success","apt_id":"eadf2770-066d-4a80-8fa4-bb045abb2c94"}
+
+
+Get apartment information:
+
+localhost:8090/getAptInfo?user_email=henry.com&apt_name=Trace2303
+
+{"roomates_email_lst":["henry.com","lucy.com","bob.com"],"status":"Success","apt_name":"Trace2303","cover_url":null,
+"roomates_nickname_lst":["henry","lucy","bob"],
+"notes_lst":[{"id":"a775ba9c-6864-4329-8908-aad37f7ef51e","date":"2015-12-11 09:22:10.781536","writer":"henry","description":"LA is awesome!!"},{"id":"db0b8f0f-4d2c-4f97-95a3-a14c3894fba8","date":"2015-12-11 09:22:25.603998","writer":"lucy","description":"LA is not awesome at all!!"}],
+"apt_id":"4a35f062-1095-4412-9e37-ffa3ff58ee77",
+"expenses_lst":[{"photo":null,"expense_name":"visit to LA","date":"2015-12-11 09:20:55.304802","creater_nickname":"henry","the_number_of_items":2,"is_paid":false,"sharer_lst":["henry.com","lucy.com","bob.com"],"expense_id":"8f3c5f11-c4ee-494e-9092-18236ddb7a49"}]}
+
+Create Expense:
+localhost:8090/createExpense?expense_name=visit to LA&user_email=henry.com&user_email_lst=lucy.com,bob.com&apt_name=Trace2303
+{"status":"Success","expense_id":"2d753cb8-d637-4909-986f-f447cf201df2"}
+
+
+Get Expense:
+localhost:8090/getExpenseInfo?expense_id=2d753cb8-d637-4909-986f-f447cf201df2
+
+{"items_lst":[{"cover_url":null,"item_cost":386.2,"item_name":"dinner together","is_paid":null,"buyer":"lucy","sharer_lst":["henry","bob"],"item_id":"dd38bc40-3e54-40af-9937-1ddd56cb0054"},{"cover_url":null,"item_cost":986.2,"item_name":"Flight AXA12 AUS-LA","is_paid":null,"buyer":"henry","sharer_lst":["lucy","bob"],"item_id":"ccfab422-b939-46b7-a307-faaa185f99f8"}],
+"is_paid":false,"status":"Success",
+"expense_user_lst":["henry","lucy","bob"],
+"task_info":{"finished_tasks_lst":[{"task_name":"buy 3 tickets for Lakers vs Rockets","task_id":"d53aa284-876f-43ef-89ef-82aed8bfe806","photo":null,"person in charge email":"lucy.com","creater":"henry","creater_email":"henry.com","person in charge":"lucy"}],"unassigned_tasks_lst":[],"assigned_tasks_lst":[]},
+"expense_name":"visit to LA","total_cost":1372.4}
+
+
+Create Item under expense:
+localhost:8090/createItem?expense_name=visit to LA&buyer_email=henry.com&sharer_email_lst=lucy.com,bob.com&total_cost=986.2&item_name=Flight AXA12 AUS-LA
+
+{"item_id_id":"0a48f78c-f437-4a85-988b-59e75d5f7d11","status":"Success"}
+
+
+
+Get Item:
+localhost:8090/getItemInfo?item_id=0a48f78c-f437-4a85-988b-59e75d5f7d11
+
+{"item":{"buyer":"lucy","cover_url":null,"sharer_lst":["henry","bob"],"item_cost":386.2,"item_name":"dinner together","is_paid":null,"item_id":"dd38bc40-3e54-40af-9937-1ddd56cb0054"}
+,"status":"Success"}
+
+
+
+Add user to Apartment:
+localhost:8090/addUserToApt?apt_name=Trace2303&user_email=henry.com&new_user=alex.com
+
+{"status":"Success","apt_id":"a669ba1b-2fbc-4991-8e30-8640589a4943"}
+
+
+
+Checkout single expense:
+localhost:8090/checkSingleExpense?expense_name=visit to NYC&apt_name=Trace2303&user_email=Henry.com
+{"status":"Success"}
+
+Checkout all expenses;
+localhost:8090/checkAllExpense?apt_name=Trace2303&user_email=Henry.com
+{"status":"Success"}
+
+Calculate payment for each Apartment member:
+localhost:8090/getPayment?apt_name=Trace2303&user_email=Henry.com
+{"status":"Success","payment_lst":[{"to":"Henry.com","from":"Bob.com","amount":333.33333333333337},{"to":"Henry.com","from":"lucy.com","amount":133.33333333333337}]}
+
+Add note to apartment's notebook:
+localhost:8090/addNote?apt_name=Trace2303&user_email=henry.com&description=LA is awesome!!
+
+{"status":"Success","note_id":"d6d5e77a-4190-4e09-ad32-d25ca442ddfe","notebook_id":"94b8da7a-a6ae-42ec-af63-17416f79f6af"}
+
+Edit Note (only note's author is allowed to do that):
+localhost:8090/editNote?note_id=d6d5e77a-4190-4e09-ad32-d25ca442ddfe&user_email=henry.com&new_description=LA is actually not awesome!!
+{
+    "note_id": "a14f99de-c971-4275-8d68-8697b7396f9b",
+    "user_email":"Henry.com",
+    "new_description": "LA is actually not awesome!!"
+}
+{"status":"Success"}
+
+// get all notes in the note book
+localhost:8090/getAllNote?apt_name=Trace2303&user_email=henry.com
+{"AllNoteLst":[{"author":"henry.com","description":"LA is actually not awesome!!","last_edit_date":"2015-11-30 23:15:48.421405"}],"status":"Success"}
+
+
+// get single note
+localhost:8090/getSingleNote?user_email=henry.com&note_id=d6d5e77a-4190-4e09-ad32-d25ca442ddfe
+{"status":"Success","Note":{"author":"henry.com","last_edit_date":"2015-12-12 11:26:58.091037","description":"LA is actually not awesome!!"}}
+// add reply to a note
+localhost:8090/addReply?user_email=bob.com&description=Why u dont like LA&note_id=d6d5e77a-4190-4e09-ad32-d25ca442ddfe
+
+
+{"reply_id":"e9370c0a-181e-4125-a5d8-8c42c966b03f","status":"Success"}
+
+// get all reply for a note
+localhost:8090/getAllReply?note_id=db0b8f0f-4d2c-4f97-95a3-a14c3894fba8
+
+{"reply_lst":[{"author":"bob","author_email":"bob.com","description":"why u dont like LA","date":"2015-12-11 12:58:21.670360","reply_id":"e9370c0a-181e-4125-a5d8-8c42c966b03f"},{"author":"lucy","author_email":"lucy.com","description":"it is too expensive","date":"2015-12-11 12:59:26.856110","reply_id":"6c9e59e1-d977-49fb-9ae4-3a278d2802e7"}],"status":"Success"}
+
+//  get owe and owed information for each user:
+localhost:8070/getOweandOwed?apt_name=Trace2303&user_email=henry.com
+
+":"Success","total_cost":1958.6000000000001,"user_info_lst":[{"email:":"henry.com","balance":333.33333333333337,"owe":986.2,"nick_name":"henry","owed":652.8666666666667},{"email:":"lucy.com","balance":-266.66666666666674,"owe":386.2,"nick_name":"luc1y","owed":652.8666666666667},{"email:":"alex.com","balance":-66.66666666666663,"owe":586.2,"nick_name":"alex","owed":652.8666666666667}]}
+
+
+//  create task under expense:
+localhost:8090/createTask?expense_id=2d753cb8-d637-4909-986f-f447cf201df2&user_email=henry.com&task_name=buy 3 tickets for Lakers vs Rockets&user_email_lst=bob.com,lucy.com&description=can anyone buy three tickets for that?
+
+
+
+{"task_id":"7633b16b-6d17-4e6c-b9b0-ea16879ca5c7","status":"Success"}
+
+
+
+//  pick a task (one volunteer pick the task)
+localhost:8090/pickTask?task_id=7633b16b-6d17-4e6c-b9b0-ea16879ca5c7&user_email=lucy.com
+{"status":"Success"}
+
+
+// finish a task:
+localhost:8090/finishTask?task_id=7633b16b-6d17-4e6c-b9b0-ea16879ca5c7&total_cost=500&user_email=lucy.com
+{"item_name":"buy 3 tickets for Lakers vs Rockets","status":"Success","item_id":"d53aa284-876f-43ef-89ef-82aed8bfe806"}
+
+// get all tasks:
+localhost:8090/getAllTask?expense_id=2d753cb8-d637-4909-986f-f447cf201df2
+
+{"task_info":{"assigned_tasks_lst":[],"finished_tasks_lst":[{"task_name":"buy 3 tickets for Lakers vs Rockets","creater":"henry","photo":null,"person in charge email":"lucy.com","person in charge":"lucy","creater_email":"henry.com","task_id":"d53aa284-876f-43ef-89ef-82aed8bfe806"}],"unassigned_tasks_lst":[]},"status":"Success"}
