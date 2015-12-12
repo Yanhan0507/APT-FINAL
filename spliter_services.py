@@ -56,7 +56,7 @@ class CreateAccountService(ServiceHandler):
             return self.respond(**response)
 
         # nick_name = req_json[IDENTIFIER_NICE_NAME]
-        nick_name = self.request.get(IDENTIFIER_USER_EMAIL)
+        nick_name = self.request.get(IDENTIFIER_USER_NAME)
         # bank_account and user photo are not required
         bank_account = None
         cover_url = None
@@ -139,7 +139,17 @@ class CreateAptService(ServiceHandler):
         self.respond(apt_id = str(apt_id), status="Success")
 
 
-
+# get apartment basic info -liuchg
+class GetAptBasicInfoService(ServiceHandler):
+     def get(self):
+         apt_id = self.request.get(IDENTIFIER_APT_ID)
+         apts = Apartment.query(Apartment.apt_id == apt_id).fetch()
+         if apts[0]:
+             apt = apts[0]
+             self.respond(status="success", apt_id=apt.apt_id, apt_name=apt.apt_name, creater_email = apt.user_email_lst, user_email_lst=apt.user_email_lst)
+         else:
+             print("cannot find the apartment with id :" + apt_id)
+             self.respond(status="fail", error_msg="cannot find the apartment with id :" + apt_id)
 
 class CreateExpenseService(ServiceHandler):
     def get(self):
@@ -1060,6 +1070,7 @@ app = webapp2.WSGIApplication([
     ('/getUserInfo', getUserInfoService),
     ('/createAccount', CreateAccountService),
     ('/createApt', CreateAptService),
+    ('/getBasicAptInfo', GetAptBasicInfoService), #newly added
     ('/getAptInfo', getAptInfoService),
     ('/createExpense', CreateExpenseService),
     ('/getExpenseInfo', getExpenseInfoService),

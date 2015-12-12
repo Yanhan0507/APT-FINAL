@@ -6,6 +6,7 @@ KEYWORD_STATUS = 'status'
 IDENTIFIER_JSON_MSG = 'application/json'
 
 IDENTIFIER_USER_EMAIL = 'user_email'
+IDENTIFIER_USER_NAME = 'user_name'
 IDENTIFIER_USER_ID = 'user_id'
 
 
