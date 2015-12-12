@@ -47,5 +47,6 @@ IDENTIFIER_TASK_NAME = 'task_name'
 IDENTIFIER_TASK_ID = 'task_id'
 
 IDENTIFIER_TASK_PHOTO = 'task_photo'
+IDENTIFIER_ITEM_PHOTO = 'item_photo'
 
 INITIAL_BALANCE = 0

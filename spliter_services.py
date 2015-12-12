@@ -212,8 +212,8 @@ class CreateItemService(ServiceHandler):
         total_cost = float(req_json[IDENTIFIER_TOTAL_COST])
         target_expense = None
         cover_url = None
-        if IDENTIFIER_APT_PHOTO in req_json:
-            cover_url = req_json[IDENTIFIER_APT_PHOTO]
+        if IDENTIFIER_ITEM_PHOTO in req_json:
+            cover_url = req_json[IDENTIFIER_ITEM_PHOTO]
 
         for expense in expense_lst:
             if buyer_email in expense.user_email_lst:
@@ -908,6 +908,7 @@ class finishTaskService(ServiceHandler):
     def get(self):
         task_id = self.request.get(IDENTIFIER_TASK_ID)
         total_cost = self.request.get(IDENTIFIER_TOTAL_COST)
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
 
         total_cost = float(total_cost)
 
@@ -917,6 +918,10 @@ class finishTaskService(ServiceHandler):
         if task.finished:
             response = {}
             response['error'] = 'the task has already been finished'
+            return self.respond(**response)
+        if user_email != task.charger_email:
+            response = {}
+            response['error'] = 'the task has been assigned to other roommate'
             return self.respond(**response)
         task.finished = True
         task.put()

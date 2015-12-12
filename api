@@ -189,7 +189,7 @@ localhost:8090/pickTask?task_id=d53aa284-876f-43ef-89ef-82aed8bfe806&user_email=
 
 
 // finish a task:
-localhost:8090/finishTask?task_id=d53aa284-876f-43ef-89ef-82aed8bfe806&total_cost=500
+localhost:8090/finishTask?task_id=d53aa284-876f-43ef-89ef-82aed8bfe806&total_cost=500&user_email=henry.com
 {"item_name":"buy 3 tickets for Lakers vs Rockets","status":"Success","item_id":"d53aa284-876f-43ef-89ef-82aed8bfe806"}
 
 // get all tasks:
