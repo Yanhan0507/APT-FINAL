@@ -295,7 +295,7 @@ class CreateItemService(ServiceHandler):
         self.respond(item_id_id = str(item_id), status="Success")
 
 
-
+# I fixed the logic here - liuchg
 class addUserToAptService(ServiceHandler):
     def get(self):
 
@@ -304,25 +304,31 @@ class addUserToAptService(ServiceHandler):
         # apt_name = req_json[IDENTIFIER_APT_NAME]
         apt_name = self.request.get(IDENTIFIER_APT_NAME)
 
-        # user_email = req_json[IDENTIFIER_USER_EMAIL]
-        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+        # # user_email = req_json[IDENTIFIER_USER_EMAIL]
+        # user_email = self.request.get(IDENTIFIER_USER_EMAIL)
 
         # new_email = req_json[IDENTIFIER_NEW_EMAIL]
         new_email = self.request.get(IDENTIFIER_NEW_EMAIL)
 
-        apt_lst = Apartment.query(Apartment.apt_name == apt_name)
+        apt_lst = Apartment.query(Apartment.apt_name == apt_name).fetch()
+
         target_apt = None
 
-        for apt in apt_lst:
-            if user_email in apt.user_email_lst:
-                target_apt = apt
-                break
+        if len(apt_lst)!=0:
+            target_apt = apt_lst[0]
+
+
+
+        # for apt in apt_lst:
+        #     if user_email in apt.user_email_lst:
+        #         target_apt = apt
+        #         break
         user_lst = User.query(User.user_email == new_email).fetch()
 
-        if target_apt == None:
-            response = {}
-            response['error'] = 'the email: ' + user_email + ' has not been registered'
-            return self.respond(**response)
+        # if target_apt == None:
+        #     response = {}
+        #     response['error'] = 'the email: ' + user_email + ' has not been registered'
+        #     return self.respond(**response)
         if len(user_lst) == 0:
             response = {}
             response['error'] = 'the new email: ' + new_email + ' has not been registered'
