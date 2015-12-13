@@ -23,6 +23,8 @@ import logging, json
 import uuid
 from datetime import datetime
 from model import User, Apartment, Expense, Item, Note, NoteBook, Reply, Task
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext import blobstore
 
 class ServiceHandler(webapp2.RequestHandler):
     def respond(self, separators=(',', ':'), **response):
@@ -192,7 +194,7 @@ class CreateExpenseService(ServiceHandler):
             return self.respond(**response)
 
 
-        user_email_lst.insert(0, user_email)
+        # user_email_lst.insert(0, user_email)
 
 
         # check whether this apt name is valid or not
@@ -717,14 +719,14 @@ class getUserInfoService(ServiceHandler):
         finished_task_lst = []
         unfinished_task_lst = []
 
-        for task in tasks:
-            cur_task = {}
-            cur_task['task_id'] = task.task_id
-            cur_task['task_name'] = task.task_name
-            if task.finished:
-                finished_task_lst.append(cur_task)
-            else:
-                unfinished_task_lst.append(cur_task)
+        # for task in tasks:
+        #     cur_task = {}
+        #     cur_task['task_id'] = task.task_id
+        #     cur_task['task_name'] = task.task_name
+        #     if task.finished:
+        #         finished_task_lst.append(cur_task)
+        #     else:
+        #         unfinished_task_lst.append(cur_task)
 
         taskinfo = {}
         taskinfo['finished_task_lst'] = finished_task_lst
@@ -887,7 +889,7 @@ class getExpenseInfoService(ServiceHandler):
 
             for task in tasks:
                 cur_task = {}
-                cur_task['photo'] = task.cover_url
+                cur_task['photo'] = task.photo_blobkey
                 cur_task['creater'] = task.getCreaterNickName()
                 cur_task['creater_email'] = task.creater_email
                 cur_task['task_name'] = task.task_name
@@ -1007,11 +1009,13 @@ class createTaskService(ServiceHandler):
         # task_name = req_json[IDENTIFIER_TASK_NAME]
         task_name = self.request.get(IDENTIFIER_TASK_NAME)
 
-        # expense_id = req_json[IDENTIFIER_EXPENSE_ID]
-        expense_id = self.request.get(IDENTIFIER_EXPENSE_ID)
-
         # creater_email = req_json[IDENTIFIER_USER_EMAIL]
         creater_email = self.request.get(IDENTIFIER_USER_EMAIL)
+
+        #create a new expense
+        expense_id = uuid.uuid4()
+        # req_json = json.loads(self.request.body)
+        expense_name = "Task_"+task_name
 
         # candidate_lst= req_json[IDENTIFIER_USER_EMAIL_LIST]
         candidates = self.request.get(IDENTIFIER_USER_EMAIL_LIST)
@@ -1020,18 +1024,43 @@ class createTaskService(ServiceHandler):
         # description = req_json[IDENTIFIER_DESCRIPTION_NAME]
         description = self.request.get(IDENTIFIER_DESCRIPTION_NAME)
 
-        candidate_lst.append(creater_email)
-        expenses = Expense.query(Expense.expense_id == expense_id).fetch()
-        expense = expenses[0]
-        expense.task_id_lst.append(str(task_id))
-        expense.put()
-        new_task = Task(task_name = task_name, expense_id = expense_id, creater_email = creater_email,
-                        candidate_lst = candidate_lst, description = description, cover_url = photo, task_id = str(task_id),
-                        finished = False, assigned = False)
-        new_task.put()
+        apt_id = self.request.get(IDENTIFIER_APT_ID)
 
-        self.respond(task_id = str(task_id),
-                         status="Success")
+        target_apt_lst = Apartment.query(Apartment.apt_id == apt_id).fetch()
+
+
+        if len(target_apt_lst)!=0:
+            target_apt = target_apt_lst[0]
+            print "Found the target_apt " + target_apt.apt_name
+            new_expense = Expense(apt_id = target_apt.apt_id,
+                                  creater_email = creater_email,
+                                  user_email_lst = candidate_lst,
+                                  cover_url = None,
+                                  expense_name = expense_name,
+                                  total_cost = 0,
+                                  is_paid = False,
+                                  expense_id = str(expense_id ))
+
+            target_apt.expense_id_lst.insert(0, str(expense_id))
+            new_expense.put()
+            target_apt.put()
+            task_id_lst = new_expense.task_id_lst
+            if not task_id_lst:
+                task_id_lst = []
+            task_id_lst.append(str(task_id))
+            new_expense.task_id_lst = task_id_lst
+            new_expense.put()
+
+        # # expenses = Expense.query(Expense.expense_id == expense_id).fetch()
+        # # expense = expenses[0]
+        # expense.task_id_lst.append(str(task_id))
+        # expense.put()
+            new_task = Task(task_name = task_name, expense_id = str(expense_id), creater_email = creater_email,
+                        candidate_lst = candidate_lst, description = description, photo_blobkey = photo, task_id = str(task_id),
+                        finished = False, assigned = False)
+            new_task.put()
+
+            self.respond(task_id = str(task_id), status="Success")
 
 class pickTaskService(ServiceHandler):
     def get(self):
@@ -1056,16 +1085,22 @@ class pickTaskService(ServiceHandler):
 
         self.respond(status="Success")
 
+
 class finishTaskService(ServiceHandler):
     def get(self):
+        print("get finish task request")
+
         task_id = self.request.get(IDENTIFIER_TASK_ID)
         total_cost = self.request.get(IDENTIFIER_TOTAL_COST)
         user_email = self.request.get(IDENTIFIER_USER_EMAIL)
 
         total_cost = float(total_cost)
+        print("get cost " + str(total_cost))
 
         tasks = Task.query(Task.task_id == task_id).fetch()
         task = tasks[0]
+
+        print("Found the task " + task.task_name)
 
         if task.finished:
             response = {}
@@ -1079,49 +1114,76 @@ class finishTaskService(ServiceHandler):
         task.put()
         item_id = str(uuid.uuid4())
         sharer_lst = task.candidate_lst
-        sharer_lst.remove(task.charger_email)
+        # sharer_lst.remove(task.charger_email)   # newly removed this line
 
+        print("creating item ")
 
-
-        new_Item = Item(item_id = item_id, cover_url = task.cover_url, expense_id = task.expense_id,
+        new_Item = Item(item_id = item_id, cover_url = task.photo_blobkey, expense_id = task.expense_id,
                         total_cost = total_cost,
                         buyer_email = task.charger_email,
                         sharer_email_lst = sharer_lst,
                         item_name = task.task_name)
-
         new_Item.put()
+
+        expenses = Expense.query(Expense.expense_id == task.expense_id).fetch()
+        if len(expenses) == 0:
+            print("cannot find the expense");
+        else:
+            expense = expenses[0]
+            item_ids = expense.item_id_lst
+            item_ids.append(item_id)
+            expense.item_id_lst = item_ids
+            expense.put()
+            print("done ")
 
         self.respond(item_name = task.task_name, item_id = task.task_id, status="Success")
 
 
+# changed to apt id
 class getAllTaskService(ServiceHandler):
     def get(self):
-        expense_id = self.request.get(IDENTIFIER_EXPENSE_ID)
-        expenses = Expense.query(Expense.expense_id == expense_id).fetch()
-        expense = expenses[0]
+
+        apt_id = self.request.get(IDENTIFIER_APT_ID)
+        target_apt_lst = Apartment.query(Apartment.apt_id == apt_id).fetch()
+        if len(target_apt_lst)!=1:
+            print "target_apt_lst length error:" + str(len(target_apt_lst))
+        query_apt = target_apt_lst[0]
+
+        expense_id_lst = query_apt.expense_id_lst
+        print "expense_id_lst length:" + str(len(expense_id_lst))
 
         unassigned_tasks_lst = []
         assigned_tasks_lst = []
         finished_tasks_lst = []
 
-        tasks = expense.getAllTasks()
+        for expense_id in expense_id_lst:
+            # expense_id = self.request.get(IDENTIFIER_EXPENSE_ID)
+            expenses = Expense.query(Expense.expense_id == expense_id).fetch()
+            if len(expenses) == 0:
+                continue
+            expense = expenses[0]
 
-        for task in tasks:
-            cur_task = {}
-            cur_task['photo'] = task.cover_url
-            cur_task['creater'] = task.getCreaterNickName()
-            cur_task['creater_email'] = task.creater_email
-            cur_task['task_name'] = task.task_name
-            cur_task['task_id'] = str(task.task_id)
-            if task.assigned:
-                cur_task['person in charge'] = task.getChargerNickName()
-                cur_task['person in charge email'] = task.charger_email
-                if task.finished:
-                    finished_tasks_lst.append(cur_task)
+            tasks = expense.getAllTasks()
+
+            for task in tasks:
+                cur_task = {}
+                cur_task['photo_blobkey'] = task.photo_blobkey
+                cur_task['creator_nickname'] = task.getCreaterNickName()
+                cur_task['creator_email'] = task.creater_email
+                cur_task['task_name'] = task.task_name
+                cur_task['description'] = task.description
+                cur_task['task_id'] = str(task.task_id)
+                cur_task['expense_id'] = str(task.expense_id)
+                cur_task['candidate_lst_str'] = task.getCandidateListString()
+                if task.assigned:
+                    cur_task['charger_name'] = task.getChargerNickName()
+                    cur_task['charger_email'] = task.charger_email
+                    if task.finished:
+                        finished_tasks_lst.append(cur_task)
+                    else:
+                        assigned_tasks_lst.append(cur_task)
                 else:
-                    assigned_tasks_lst.append(cur_task)
-            else:
-                unassigned_tasks_lst.append(cur_task)
+                    unassigned_tasks_lst.append(cur_task)
 
         task_info = {}
         task_info['finished_tasks_lst'] = finished_tasks_lst
@@ -1130,9 +1192,33 @@ class getAllTaskService(ServiceHandler):
 
         self.respond(task_info=task_info, status="Success")
 
+
+class mUploadImageService(blobstore_handlers.BlobstoreUploadHandler):
+    def post(self):
+        print 'UploadImageService >> get upload image request ', str(len(self.get_uploads()))
+
+        if len(self.get_uploads())!=0:
+            blobkey = ""
+            for upload in self.get_uploads():
+                blobkey = upload.key()
+            task_id = self.request.get(IDENTIFIER_TASK_ID)
+            tasks = Task.query(Task.task_id == task_id).fetch()
+            target_task = tasks[0]
+            target_task.photo_blobkey = blobkey
+            target_task.put()
+            print 'UploadImageService >> image upload success'
+
+
+class mGetUploadURL(ServiceHandler):
+    def get(self):
+        upload_url = blobstore.create_upload_url('/ws/upload_image')
+        self.respond(upload_url=upload_url, status="success")
+
+
 def removeQuote(str):
     str.replace('"','')
     return str
+
 
 
 app = webapp2.WSGIApplication([
@@ -1164,5 +1250,8 @@ app = webapp2.WSGIApplication([
     ('/addNote', addNoteService),
     ('/editNote' ,editNoteService),
     ('/getAllNote', getAllNoteService),
-    ('/getSingleNote', getSingleNoteService)
+    ('/getSingleNote', getSingleNoteService),
+    ('/m_get_upload_url', mGetUploadURL),
+    ('/m_upload_task_image', mUploadImageService)
+
 ], debug=True)

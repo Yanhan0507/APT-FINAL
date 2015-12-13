@@ -131,7 +131,7 @@ class Task(ndb.Model):
     expense_id = ndb.StringProperty()
     task_id = ndb.StringProperty()
     task_name = ndb.StringProperty()
-    cover_url = ndb.StringProperty()
+    photo_blobkey = ndb.BlobKeyProperty()
     creater_email = ndb.StringProperty()
     description = ndb.StringProperty()
 
@@ -148,7 +148,12 @@ class Task(ndb.Model):
         creaters = User.query(User.user_email == self.creater_email).fetch()
         creater = creaters[0]
         return creater.nick_name
-
+    def getCandidateListString(self):
+        candidate_str="";
+        for candicate_mail in self.candidate_lst:
+            candidate_str = candidate_str + candicate_mail + ","
+        candidate_str = candidate_str[:-1]
+        return candidate_str
 
 class Item(ndb.Model):
     item_id = ndb.StringProperty()
@@ -238,6 +243,8 @@ class Apartment(ndb.Model):
         ret_lst = []
         for expense_id in self.expense_id_lst:
             expenses = Expense.query(Expense.expense_id == expense_id).fetch()
+            if len(expenses) == 0:
+                continue
             expense = expenses[0]
             ret_lst.append(expense)
         return ret_lst
@@ -258,7 +265,7 @@ class User(ndb.Model):
      def getAlltasks(self):
          ret_lst = []
          for task_id in self.tasks_list:
-             tasks = Task.query(task_id == task_id).fetch()
+             tasks = Task.query(Task.task_id == task_id).fetch()
              task = tasks[0]
              ret_lst.append(task)
          return ret_lst
