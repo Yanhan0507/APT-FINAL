@@ -426,7 +426,23 @@ class checkSingleExpenseService(ServiceHandler):
         cur_expense.checkout()
         cur_apt.total_cost += cur_expense.total_cost
         cur_apt.put()
-        self.respond(status="Success")
+
+
+        user_info_lst = []
+        for user_email in cur_apt.user_email_lst:
+            users = User.query(User.user_email == user_email).fetch()
+            user = users[0]
+            user_info = {}
+            user_info['email:'] = user_email
+            user_info['nick_name'] = user.nick_name
+            user_info['owe'] = user.cost
+            user_info['owed'] = user.borrow
+            user_info['balance'] = user.owe
+            user_info_lst.append(user_info)
+
+
+
+        self.respond(user_info_lst = user_info_lst, status="Success")
 
 class checkAllExpenseService(ServiceHandler):
     def get(self):
