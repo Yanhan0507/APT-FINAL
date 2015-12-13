@@ -150,12 +150,17 @@ class GetAptBasicInfoService(ServiceHandler):
      def get(self):
          apt_id = self.request.get(IDENTIFIER_APT_ID)
          apts = Apartment.query(Apartment.apt_id == apt_id).fetch()
+         user_nickname_lst=[]
          if apts[0]:
-             apt = apts[0]
-             self.respond(status="success", apt_id=apt.apt_id, apt_name=apt.apt_name, creater_email=apt.user_email_lst, user_email_lst=apt.user_email_lst)
+            apt = apts[0]
+            for user_email in apt.user_email_lst:
+                users = User.query(User.user_email == user_email).fetch()
+                user = users[0]
+                user_nickname_lst.append(user.nick_name)
+            self.respond(status="success", apt_id=apt.apt_id, apt_name=apt.apt_name, creater_email=apt.user_email_lst, user_email_lst=apt.user_email_lst, user_nickname_lst=user_nickname_lst)
          else:
-             print("cannot find the apartment with id :" + apt_id)
-             self.respond(status="fail", error_msg="cannot find the apartment with id :" + apt_id)
+            print("cannot find the apartment with id :" + apt_id)
+            self.respond(status="fail", error_msg="cannot find the apartment with id :" + apt_id)
 
 class CreateExpenseService(ServiceHandler):
     def get(self):
@@ -256,7 +261,8 @@ class CreateItemService(ServiceHandler):
         expense_id = None
 
         # total_cost = float(req_json[IDENTIFIER_TOTAL_COST])
-        total_cost = float(self.request.get(IDENTIFIER_TOTAL_COST))
+        cost = self.request.get(IDENTIFIER_TOTAL_COST)
+        total_cost = float(cost)
 
 
         target_expense = None
@@ -817,7 +823,7 @@ class getExpenseListService(ServiceHandler):
                     cur_expense['is_paid'] = expense.is_paid
                     cur_expense['the_number_of_items'] = len(expense.item_id_lst)
                     cur_expense['total_cost'] = expense.total_cost
-                    cur_expense['approval_cost'] = expense.approval_cost
+                    # cur_expense['approval_cost'] = expense.approval_cost
                     expenses_lst.append(cur_expense)
         self.respond(status="success", expenses_lst=expenses_lst)
 
@@ -848,6 +854,7 @@ class getExpenseInfoService(ServiceHandler):
                 cur_item['buyer'] = item.getBuyer()
                 cur_item['sharer_lst'] = item.getSharersNickName()
                 cur_item['item_name'] = item.item_name
+                cur_item['expense_id'] = item.expense_id    # fixed ; there was no expense_id attached here
                 items_lst.append(cur_item)
 
             finished_tasks_lst = []
@@ -876,8 +883,10 @@ class getExpenseInfoService(ServiceHandler):
             task_info['unassigned_tasks_lst'] = unassigned_tasks_lst
             task_info['assigned_tasks_lst'] = assigned_tasks_lst
 
+            user_email_lst=expense.user_email_lst
+
             self.respond(total_cost = expected_cost, items_lst = items_lst, is_paid = is_paid,
-                         expense_name = expense_name, expense_user_lst = expense_user_lst,
+                         expense_name = expense_name, expense_user_lst = expense_user_lst, user_email_lst=user_email_lst,
                          task_info = task_info, status = 'Success')
 
 

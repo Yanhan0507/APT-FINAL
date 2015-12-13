@@ -20,7 +20,7 @@ class Expense(ndb.Model):
     cover_url = ndb.StringProperty()
     last_edit = ndb.DateTimeProperty(auto_now_add=True)
     total_cost = ndb.FloatProperty()
-    approval_cost = ndb.FloatProperty()
+    # approval_cost = ndb.FloatProperty()
 
     def checkout(self):
         for item_id in self.item_id_lst:
