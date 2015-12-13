@@ -853,8 +853,10 @@ class getExpenseInfoService(ServiceHandler):
                 cur_item['cover_url'] = item.cover_url
                 cur_item['buyer'] = item.getBuyer()
                 cur_item['sharer_lst'] = item.getSharersNickName()
+                cur_item['sharer_email_lst'] = item.sharer_email_lst
                 cur_item['item_name'] = item.item_name
                 cur_item['expense_id'] = item.expense_id    # fixed ; there was no expense_id attached here
+                cur_item['buyer_email'] = item.buyer_email
                 items_lst.append(cur_item)
 
             finished_tasks_lst = []
