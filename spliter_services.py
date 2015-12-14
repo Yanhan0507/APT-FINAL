@@ -809,6 +809,7 @@ class getAptInfoService(ServiceHandler):
                 cur_expense['sharer_lst'] = expense.user_email_lst
                 cur_expense['is_paid'] = expense.is_paid
                 cur_expense['the_number_of_items'] = len(expense.item_id_lst)
+                cur_expense['total_cost'] = str(expense.total_cost)
                 expenses_lst.append(cur_expense)
 
 
@@ -889,7 +890,7 @@ class getExpenseInfoService(ServiceHandler):
 
             for task in tasks:
                 cur_task = {}
-                cur_task['photo'] = task.photo_blobkey
+                cur_task['photo'] = str(task.photo_blobkey)
                 cur_task['creater'] = task.getCreaterNickName()
                 cur_task['creater_email'] = task.creater_email
                 cur_task['task_name'] = task.task_name
@@ -1118,7 +1119,7 @@ class finishTaskService(ServiceHandler):
 
         print("creating item ")
 
-        new_Item = Item(item_id = item_id, cover_url = task.photo_blobkey, expense_id = task.expense_id,
+        new_Item = Item(item_id = item_id, cover_url = str(task.photo_blobkey), expense_id = task.expense_id,
                         total_cost = total_cost,
                         buyer_email = task.charger_email,
                         sharer_email_lst = sharer_lst,
@@ -1167,7 +1168,7 @@ class getAllTaskService(ServiceHandler):
 
             for task in tasks:
                 cur_task = {}
-                cur_task['photo_blobkey'] = task.photo_blobkey
+                cur_task['photo_blobkey'] = str(task.photo_blobkey)
                 cur_task['creator_nickname'] = task.getCreaterNickName()
                 cur_task['creator_email'] = task.creater_email
                 cur_task['task_name'] = task.task_name
@@ -1211,8 +1212,17 @@ class mUploadImageService(blobstore_handlers.BlobstoreUploadHandler):
 
 class mGetUploadURL(ServiceHandler):
     def get(self):
-        upload_url = blobstore.create_upload_url('/ws/upload_image')
+        upload_url = blobstore.create_upload_url('/m_upload_task_image')
         self.respond(upload_url=upload_url, status="success")
+
+
+# ViewImageService
+class ViewImageService(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, photo_key):
+        if not blobstore.get(photo_key):
+            self.error(404)
+        else:
+            self.send_blob(photo_key)
 
 
 def removeQuote(str):
@@ -1251,7 +1261,9 @@ app = webapp2.WSGIApplication([
     ('/editNote' ,editNoteService),
     ('/getAllNote', getAllNoteService),
     ('/getSingleNote', getSingleNoteService),
+    ('/view_photo/([^/]+)?', ViewImageService),
     ('/m_get_upload_url', mGetUploadURL),
     ('/m_upload_task_image', mUploadImageService)
+
 
 ], debug=True)
